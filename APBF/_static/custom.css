@@ -1,0 +1,4 @@
+    .text_cell_render p {
+        text-align: justify;
+        word-wrap: break-word; /* Ensures long words wrap correctly */
+    }
