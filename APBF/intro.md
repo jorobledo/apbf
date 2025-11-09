@@ -1,11 +1,19 @@
-# Welcome to your Jupyter Book
+# Material del curso **Aprendizaje Automático Basado en la Física**
 
-This is a small sample book to give you a feel for how book content is
-structured.
-It shows off a few of the major file types, as well as some sample content.
-It does not go in-depth into any particular topic - check out [the Jupyter Book documentation](https://jupyterbook.org) for more information.
+En la intersección de la física y la inteligencia artificial, surge un campo de estudio que promete revolucionar nuestra comprensión y capacidad de modelar fenómenos complejos: el aprendizaje profundo basado en la física. Este libro de apuntes está diseñado para guiar en español a estudiantes de grado y posgrado de física, ingeniería y disciplinas afines a través de este emergente ámbito de estudio. A medida que avanzamos hacia una era donde los modelos computacionales se vuelven cada vez más sofisticados, la integración de principios físicos en el aprendizaje profundo ofrece un enfoque poderoso para abordar problemas que antes parecían intratables.
 
-Check out the content pages bundled with this sample book to see more.
+El contenido de este libro se estructura en siete módulos diseñados para proporcionar una comprensión integral del aprendizaje profundo y su aplicación en contextos físicos. Comenzamos con una introducción a los fundamentos de la inteligencia artificial y el aprendizaje profundo, explorando desde los conceptos básicos del aprendizaje automático hasta la implementación de redes neuronales utilizando la popular librería `PyTorch`. Este primer módulo sienta las bases necesarias para comprender los desarrollos más avanzados que se presentan en los módulos posteriores.
+
+A medida que avanzamos, nos adentramos en el aprendizaje profundo basado en la física, donde exploramos la transición de modelos puramente basados en datos a aquellos que incorporan principios físicos. Aquí, discutimos la importancia de los sesgos inductivos y las restricciones físicas, que permiten a los modelos aprender de manera más eficiente y precisa.
+
+El tercer módulo se centra en la integración de la física dentro de las redes neuronales, presentando conceptos como las Redes Neuronales Basadas en la Física (PINNs) y la diferenciación automática para resolver ecuaciones diferenciales parciales. Estos enfoques permiten a los modelos no solo predecir resultados, sino también respetar las leyes fundamentales de la física.
+
+En los módulos siguientes, exploramos modelos probabilísticos avanzados, la transición de simulaciones a inferencia, y la cuantificación de incertidumbre en redes neuronales. Estos temas son cruciales para desarrollar modelos robustos y confiables, capaces de manejar la incertidumbre inherente en los datos del mundo real.
+
+Finalmente, el libro concluye con una exploración de operadores neuronales, un enfoque innovador que permite aprender operadores en lugar de funciones, abriendo nuevas posibilidades para la modelización de sistemas complejos.
+
+Este libro de apuntes no solo pretende ser una guía académica, sino también una invitación a explorar un campo en rápida evolución que está redefiniendo los límites de lo posible en la ciencia y la ingeniería. A través de estos módulos, esperamos equipar a los estudiantes con las herramientas y el conocimiento necesarios para contribuir al avance de esta emocionante intersección entre la física y la inteligencia artificial.
+
 
 ```{tableofcontents}
 ```
