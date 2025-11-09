@@ -1,4 +1,8 @@
-# Material del curso **Aprendizaje Automático Basado en la Física**
+# Material del curso **Aprendizaje Profundo Basado en la Física**
+
+Autor: Dr. José I. Robledo - [página personal](https://jorobledo.github.io/)
+
+## Introducción
 
 En la intersección de la física y la inteligencia artificial, surge un campo de estudio que promete revolucionar nuestra comprensión y capacidad de modelar fenómenos complejos: el aprendizaje profundo basado en la física. Este libro de apuntes está diseñado para guiar en español a estudiantes de grado y posgrado de física, ingeniería y disciplinas afines a través de este emergente ámbito de estudio. A medida que avanzamos hacia una era donde los modelos computacionales se vuelven cada vez más sofisticados, la integración de principios físicos en el aprendizaje profundo ofrece un enfoque poderoso para abordar problemas que antes parecían intratables.
 
@@ -14,6 +18,8 @@ Finalmente, el libro concluye con una exploración de operadores neuronales, un 
 
 Este libro de apuntes no solo pretende ser una guía académica, sino también una invitación a explorar un campo en rápida evolución que está redefiniendo los límites de lo posible en la ciencia y la ingeniería. A través de estos módulos, esperamos equipar a los estudiantes con las herramientas y el conocimiento necesarios para contribuir al avance de esta emocionante intersección entre la física y la inteligencia artificial.
 
+
+## Índice
 
 ```{tableofcontents}
 ```

@@ -4,6 +4,12 @@
 format: jb-book
 root: intro
 chapters:
-- file: markdown
-- file: notebooks
-- file: markdown-notebooks
+  - file: modulo_1
+  - file: modulo_2
+  - file: modulo_3
+  - file: modulo_4
+  - file: modulo_5
+  - file: modulo_6
+  - file: modulo_7
+  - file: intro_python
+
