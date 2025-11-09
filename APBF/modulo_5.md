@@ -1,1 +1,1 @@
-# 5. De Simulaciones a inferencia
+# De Simulaciones a inferencia

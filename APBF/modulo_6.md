@@ -1,1 +1,1 @@
-# 6. Cuantificación de incerteza en redes neuronales
+# Cuantificación de incerteza en redes neuronales

@@ -1,1 +1,1 @@
-# 7. Operadores neuronales
+# Operadores neuronales

@@ -1,1 +1,5 @@
-# 2. Introducción al aprendizaje profundo basado en la física
+# Introducción al aprendizaje profundo basado en la física
+
+```{contents}
+:local:
+```

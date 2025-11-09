@@ -1,1 +1,1 @@
-# 3. Embebiendo física dentro de redes neuronales
+# Embebiendo física dentro de redes neuronales

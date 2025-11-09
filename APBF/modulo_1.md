@@ -1,5 +1,23 @@
-# 1. Introducción a la inteligencia artificial y al aprendizaje profundo
+---
+jupytext:
+  cell_metadata_filter: -all
+  formats: md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
 
+# Introducción a la inteligencia artificial y al aprendizaje profundo
+
+```{contents}
+:local:
+```
+
+## Introducción
 Hoy en día, la inteligencia artificial (IA) es un campo fértil con muchas aplicaciones prácticas y un área de investigación extremadamente activa. Se buscan soluciones de parte de softwares inteligentes para la automatización de rutinas de trabajo, para entender imágenes o comprender el habla, para hacer diagnósticos médicos, para asistir a la investigación científica básica, y mucho más.
 
 Algunos éxitos tempranos de la IA se dieron en aplicaciones donde las computadoras o bien los modelos no requerían tener conocimiento acerca del mundo, sino más bien de una realidad acotada. Por ejemplo, en 1997 el modelo Deep Blue de IBM pudo vencer al campeón mundial de ajedrez del momento, Garry Kasparov. Este modelo se tuvo que entrenar en un espacio muy acotado de 64 casillas y 32 piezas que se pueden mover bajo determinadas reglas. Fue capaz de divisar estrategias de ajedrez basados en los movimientos del contrincante y fue un éxito rotundo del momento. Sin embargo, las reglas estaban bien definidas y la posibilidad de acciones en la realidad del ajedrez eran extremadamente acotadas. 
@@ -12,6 +30,8 @@ Sin embargo, las dificultades que aparecieron ante este intento de codificar a f
 
 La performance de estos algoritmos simples de aprendizaje automático depende fuertemente de la representación de los datos con los cuáles son entrenados. Cada pieza de información que se le da de entrada al modelo para su entrenamiento se conoce como una característica o *feature* en inglés. 
 
+
+## Aprendizaje automático
 El aprendizaje automático ha experimentado una evolución notable en las últimas décadas, transformándose de un campo de investigación teórico a una herramienta esencial en diversas disciplinas, incluida la física. Este progreso ha sido impulsado por avances en el poder computacional, la disponibilidad de grandes volúmenes de datos y el desarrollo de algoritmos más sofisticados. Dentro del aprendizaje automático, se distinguen tres paradigmas principales: el aprendizaje supervisado, el no supervisado y el aprendizaje por refuerzo, cada uno con sus propias características y aplicaciones.
 
 El **aprendizaje supervisado** es quizás el más intuitivo de los tres paradigmas. En este enfoque, los modelos son entrenados utilizando un conjunto de datos etiquetados, donde cada entrada está asociada con una salida deseada. Este método se asemeja a un proceso de enseñanza tradicional, donde un "maestro" proporciona ejemplos correctos y el "estudiante" (el modelo) aprende a generalizar a partir de ellos. Históricamente, el aprendizaje supervisado ha sido fundamental en tareas como la clasificación de imágenes, el reconocimiento de voz y la predicción de series temporales. Su evolución ha estado marcada por el desarrollo de algoritmos como las máquinas de soporte vectorial y, más recientemente, las redes neuronales profundas, que han permitido avances significativos en precisión y capacidad de generalización.
@@ -24,11 +44,11 @@ En conjunto, estos tres paradigmas del aprendizaje automático han transformado 
 
 El **aprendizaje profundo** ha emergido como una subdisciplina del aprendizaje automático que ha revolucionado la forma en que abordamos problemas complejos de análisis de datos y modelado. Este enfoque se basa en el uso de redes neuronales artificiales con múltiples capas, conocidas como redes neuronales profundas, que son capaces de aprender representaciones jerárquicas de los datos. A diferencia de los métodos tradicionales de aprendizaje automático, que a menudo requieren de un preprocesamiento intensivo y la extracción manual de características, el aprendizaje profundo permite que los modelos descubran automáticamente las características relevantes directamente a partir de los datos brutos. Este avance ha sido posible gracias a mejoras en algoritmos de optimización, la disponibilidad de grandes conjuntos de datos y el incremento del poder computacional, especialmente a través del uso de unidades de procesamiento gráfico (GPUs). En los últimos años, el aprendizaje profundo ha demostrado ser extraordinariamente eficaz en una amplia gama de aplicaciones, desde el reconocimiento de imágenes y el procesamiento del lenguaje natural hasta la simulación de fenómenos físicos complejos. Al integrar el aprendizaje profundo con principios físicos, se abre un nuevo horizonte de posibilidades, permitiendo a los científicos y ingenieros desarrollar modelos más precisos y eficientes que respeten las leyes fundamentales de la naturaleza.
 
-## Ejemplo de aprendizaje supervisado
+### Ejemplo de aprendizaje supervisado
 
 Supongamos que queremos predecir la temperatura diaria de una ciudad en función de diversas características climáticas. Disponemos de un conjunto de datos históricos que incluye la temperatura máxima del día anterior, la humedad promedio, la velocidad del viento y la cantidad de precipitación. Nuestro objetivo es construir un modelo de aprendizaje automático supervisado que pueda predecir la temperatura máxima del día siguiente.
 
-```python
+```{code-cell} ipython3
 # Importar las bibliotecas necesarias
 import numpy as np
 import pandas as pd

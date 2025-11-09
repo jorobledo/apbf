@@ -3,6 +3,9 @@
 
 format: jb-book
 root: intro
+options:
+  numbered: True
+  maxdepth: 3
 chapters:
   - file: modulo_1
   - file: modulo_2
