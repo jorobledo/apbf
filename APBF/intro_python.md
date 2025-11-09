@@ -1,3 +1,16 @@
+---
+jupytext:
+  cell_metadata_filter: -all
+  formats: md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
+
 # Apéndice: Introducción a Python
 
 ## Librerías principales que se utilizan en estas notas
@@ -74,22 +87,22 @@ Pandas introduce dos estructuras de datos fundamentales: Series y DataFrame.
 
 -  Series: Es una estructura unidimensional similar a un array, lista o columna en una tabla. Cada elemento en una Series tiene un índice asociado, lo que permite un acceso más flexible a los datos.
 
-```python 
+```{code-cell} ipython3 
 import pandas as pd
 
 # Crear una Series
 s = pd.Series([10, 20, 30, 40], index=['a', 'b', 'c', 'd'])
-print(s)
+s
 ```
 
 - DataFrame: Es una estructura bidimensional, similar a una hoja de cálculo o una tabla SQL, que contiene filas y columnas. Los DataFrames son el núcleo de Pandas y permiten almacenar y manipular datos tabulares de manera eficiente.
 
-```python
+```{code-cell} ipython3
 # Crear un DataFrame
 data = {'Temperatura': [22, 21, 19, 23],
         'Humedad': [30, 45, 50, 40]}
 df = pd.DataFrame(data, index=['Día 1', 'Día 2', 'Día 3', 'Día 4'])
-print(df)
+df
 ```
 
 #### Manipulación de Datos
@@ -98,52 +111,69 @@ Pandas ofrece una amplia gama de funciones para manipular y transformar datos, l
 
 - **Selección y Filtrado**: Puedes seleccionar columnas, filas o valores específicos utilizando etiquetas o condiciones.
 
-```python
+```{code-cell} ipython3
 # Seleccionar una columna
 temperatura = df['Temperatura']
+temperatura
+```
 
+```{code-cell} ipython3
 # Filtrar filas basadas en una condición
 alta_humedad = df[df['Humedad'] > 40]
+alta_humedad
 ```
 
 - **Operaciones de Agregación**: Pandas permite realizar operaciones de agregación como suma, media y conteo de manera sencilla.
 
-```python
+```{code-cell} ipython3
 # Calcular la media de cada columna
 media_columnas = df.mean()
+print(media_columnas)
+```
 
+```{code-cell} ipython3
 # Sumar todos los valores de una columna
 suma_temperatura = df['Temperatura'].sum()
+print(suma_temperatura)
 ```
 
 - **Manejo de Datos Faltantes**: Pandas proporciona métodos para identificar y manejar datos faltantes, lo cual es crucial en el análisis de datos reales.
 
-```python
+```{code-cell} ipython3
 # Identificar valores faltantes
 faltantes = df.isnull()
+faltantes
+```
 
+```{code-cell} ipython3
 # Rellenar valores faltantes
 df_rellenado = df.fillna(0)
+df_rellenado
 ```
 
 #### Operaciones Avanzadas
 
 - **Agrupación**: La función `groupby` permite agrupar datos y aplicar funciones de agregación a cada grupo.
 
-```python
+```{code-cell} ipython3
 # Agrupar por una columna y calcular la media
 grupo = df.groupby('Humedad').mean()
+grupo
 ```
 
 - **Combinación de Datos**: Pandas facilita la combinación de múltiples `DataFrames` mediante operaciones de concatenación y fusión.
 
-```python
+```{code-cell} ipython3
 # Concatenar DataFrames
 df_concatenado = pd.concat([df, df])
+df_concatenado
+```
 
+```{code-cell} ipython3
 # Fusionar DataFrames
 df_otra = pd.DataFrame({'Humedad': [30, 45], 'Presión': [1012, 1015]})
 df_fusionado = pd.merge(df, df_otra, on='Humedad')
+df_fusionado
 ```
 
 ### Scikit-learn
