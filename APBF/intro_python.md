@@ -10,7 +10,7 @@ kernelspec:
   language: python
   name: python3
 ---
-
+(apendice)=
 # Apéndice: Introducción a librerías de Python útiles
 
 
@@ -80,6 +80,64 @@ elemento = b[1, 2]  # Elemento en la segunda fila, tercera columna
 sub_array = b[:, 1:3]  # Todas las filas, columnas 1 a 2
 ```
 
+## Matplotlib
+
+Matplotlib es una biblioteca de Python ampliamente utilizada para la visualización de datos. Es especialmente útil para estudiantes de física que necesitan representar gráficamente resultados experimentales, simulaciones y análisis de datos. Matplotlib proporciona una amplia gama de herramientas para crear gráficos estáticos, animados e interactivos en Python.
+
+### Características Principales
+
+Matplotlib es conocida por su flexibilidad y capacidad para crear una variedad de tipos de gráficos, desde simples gráficos de líneas hasta complejas visualizaciones tridimensionales. Algunas de sus características clave incluyen:
+
+- **Gráficos de Líneas y Dispersión**: Ideal para representar series temporales, funciones matemáticas y relaciones entre variables.
+
+- **Histogramas y Gráficos de Barras**: Útiles para mostrar distribuciones de datos y comparaciones categóricas.
+
+- **Gráficos de Sectores y Diagramas de Caja**: Permiten visualizar proporciones y distribuciones estadísticas.
+
+- **Visualizaciones 3D**: Con el módulo `mpl_toolkits.mplot3d`, es posible crear gráficos tridimensionales para representar datos en tres dimensiones.
+
+- **Personalización Extensiva**: Matplotlib ofrece una amplia gama de opciones para personalizar gráficos, incluyendo colores, estilos de línea, etiquetas y leyendas.
+
+### Flujo de Trabajo Típico
+
+El flujo de trabajo típico en Matplotlib para crear un gráfico sigue estos pasos:
+
+1. **Importar la Biblioteca**: Importar Matplotlib y sus submódulos necesarios, como `pyplot`.
+
+2. **Preparar los Datos**: Organizar los datos que se desean visualizar.
+
+3. **Crear el Gráfico**: Utilizar funciones de `pyplot` para crear el tipo de gráfico deseado.
+
+4. **Personalizar el Gráfico**: Añadir títulos, etiquetas, leyendas y ajustar el estilo del gráfico según sea necesario.
+
+5. **Mostrar o Guardar el Gráfico**: Utilizar `show()` para visualizar el gráfico o `savefig()` para guardarlo en un archivo.
+
+### Ejemplo Básico
+
+A continuación, se presenta un ejemplo simple de cómo usar Matplotlib para crear un gráfico de líneas:
+
+```{code-cell} ipython3
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Generar datos
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+# Crear el gráfico
+plt.figure(figsize=(8, 4))
+plt.plot(x, y, label='Seno', color='b', linestyle='-')
+
+# Personalizar el gráfico
+plt.title('Gráfico de la Función Seno')
+plt.xlabel('x')
+plt.ylabel('sin(x)')
+plt.legend()
+plt.grid(True)
+
+# Mostrar el gráfico
+plt.show()
+```
 
 ## Pandas
 
@@ -338,4 +396,6 @@ with torch.no_grad():
     print(f"Precisión del modelo: {accuracy:.2f}")
 ```
 
-## Matplotlib
+
+
+

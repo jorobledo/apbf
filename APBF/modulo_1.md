@@ -36,6 +36,56 @@ El aprendizaje automático ha experimentado una evolución notable en las últim
 
 El **aprendizaje supervisado** es quizás el más intuitivo de los tres paradigmas. En este enfoque, los modelos son entrenados utilizando un conjunto de datos etiquetados, donde cada entrada está asociada con una salida deseada. Este método se asemeja a un proceso de enseñanza tradicional, donde un "maestro" proporciona ejemplos correctos y el "estudiante" (el modelo) aprende a generalizar a partir de ellos. Históricamente, el aprendizaje supervisado ha sido fundamental en tareas como la clasificación de imágenes, el reconocimiento de voz y la predicción de series temporales. Su evolución ha estado marcada por el desarrollo de algoritmos como las máquinas de soporte vectorial y, más recientemente, las redes neuronales profundas, que han permitido avances significativos en precisión y capacidad de generalización.
 
+En el ámbito del aprendizaje automático, una de las técnicas fundamentales para mejorar la capacidad de un modelo para clasificar datos es la transformación de características. A menudo, los datos en su forma original no son linealmente separables, lo que significa que no se puede trazar una línea recta (o un hiperplano en dimensiones superiores) que divida los datos en sus respectivas clases. Sin embargo, al aplicar una transformación adecuada, es posible mapear los datos a un espacio donde se vuelven linealmente separables. Un ejemplo clásico de esto es el caso de dos conjuntos de datos concéntricos en forma de anillo en un espacio de coordenadas cartesianas. En este espacio, los datos no son linealmente separables. Sin embargo, al transformar estos datos a coordenadas polares, donde cada punto se representa por su distancia al origen (r) y su ángulo ($\theta$), los datos se vuelven linealmente separables en el espacio transformado. A continuación, se presenta un ejemplo en Python que ilustra este concepto.
+
+```{code-cell} ipython3
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_circles
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.pipeline import make_pipeline
+
+# Generar datos en forma de círculos concéntricos
+X, y = make_circles(n_samples=300, noise=0.05, factor=0.5, random_state=42)
+
+# Función para transformar a coordenadas polares
+def cartesian_to_polar(X):
+    r = np.sqrt(X[:, 0]**2 + X[:, 1]**2)
+    theta = np.arctan2(X[:, 1], X[:, 0])
+    return np.vstack((r, theta)).T
+
+# Crear un modelo de regresión logística con transformación de coordenadas
+model = make_pipeline(FunctionTransformer(cartesian_to_polar, validate=True), LogisticRegression())
+
+# Entrenar el modelo
+model.fit(X, y)
+
+# Visualizar los datos originales
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.scatter(X[:, 0], X[:, 1], c=y, cmap='viridis', edgecolor='k')
+plt.title('Datos en Coordenadas Cartesianas')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.grid(True)
+
+# Visualizar la separación en el espacio transformado
+plt.subplot(1, 2, 2)
+X_polar = cartesian_to_polar(X)
+plt.scatter(X_polar[:, 0], X_polar[:, 1], c=y, cmap='viridis', edgecolor='k')
+plt.title('Datos en Coordenadas Polares')
+plt.xlabel('r')
+plt.ylabel(r'$\theta$')
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+```
+
+En este ejemplo, los datos originales en coordenadas cartesianas (X, Y) forman dos anillos concéntricos que no pueden ser separados por una línea recta. Sin embargo, al transformar estos datos a coordenadas polares (r, θ), la característica radial (r) permite separar los datos de manera lineal, ya que los puntos de diferentes clases tienen diferentes distancias al origen. Este tipo de transformación es una poderosa herramienta en el aprendizaje automático, ya que permite que modelos lineales simples, como la regresión logística, resuelvan problemas que inicialmente parecen requerir modelos más complejos.
+
+
 Por otro lado, el **aprendizaje no supervisado** aborda el desafío de encontrar patrones ocultos en datos no etiquetados. Este paradigma es especialmente relevante en situaciones donde la anotación de datos es costosa o imposible. A lo largo de los años, el aprendizaje no supervisado ha evolucionado desde técnicas básicas de agrupamiento, como el algoritmo k-means, hasta métodos más complejos como los autoencoders y las redes generativas adversarias (GANs). Estos avances han permitido aplicaciones innovadoras, como la reducción de dimensionalidad y la generación de datos sintéticos, ampliando las fronteras de lo que es posible en el análisis de datos.
 
 Finalmente, el **aprendizaje por refuerzo** se inspira en la forma en que los seres vivos aprenden a través de la interacción con su entorno. En este enfoque, un agente aprende a tomar decisiones secuenciales mediante un proceso de prueba y error, recibiendo recompensas o castigos en función de las acciones que realiza. Este paradigma ha ganado prominencia en los últimos años, especialmente con el desarrollo de algoritmos de aprendizaje profundo por refuerzo que han logrado hazañas impresionantes, como vencer a campeones humanos en juegos complejos como el Go y el ajedrez. La evolución del aprendizaje por refuerzo refleja un cambio hacia sistemas más autónomos y adaptativos, capaces de aprender comportamientos complejos en entornos dinámicos.
@@ -43,6 +93,8 @@ Finalmente, el **aprendizaje por refuerzo** se inspira en la forma en que los se
 En conjunto, estos tres paradigmas del aprendizaje automático han transformado nuestra capacidad para analizar y modelar datos, abriendo nuevas oportunidades para la investigación y la innovación en física y otras disciplinas científicas. A medida que continuamos explorando sus aplicaciones, es esencial comprender las fortalezas y limitaciones de cada enfoque, así como su evolución histórica, para aprovechar al máximo su potencial en la resolución de problemas complejos.
 
 El **aprendizaje profundo** ha emergido como una subdisciplina del aprendizaje automático que ha revolucionado la forma en que abordamos problemas complejos de análisis de datos y modelado. Este enfoque se basa en el uso de redes neuronales artificiales con múltiples capas, conocidas como redes neuronales profundas, que son capaces de aprender representaciones jerárquicas de los datos. A diferencia de los métodos tradicionales de aprendizaje automático, que a menudo requieren de un preprocesamiento intensivo y la extracción manual de características, el aprendizaje profundo permite que los modelos descubran automáticamente las características relevantes directamente a partir de los datos brutos. Este avance ha sido posible gracias a mejoras en algoritmos de optimización, la disponibilidad de grandes conjuntos de datos y el incremento del poder computacional, especialmente a través del uso de unidades de procesamiento gráfico (GPUs). En los últimos años, el aprendizaje profundo ha demostrado ser extraordinariamente eficaz en una amplia gama de aplicaciones, desde el reconocimiento de imágenes y el procesamiento del lenguaje natural hasta la simulación de fenómenos físicos complejos. Al integrar el aprendizaje profundo con principios físicos, se abre un nuevo horizonte de posibilidades, permitiendo a los científicos y ingenieros desarrollar modelos más precisos y eficientes que respeten las leyes fundamentales de la naturaleza.
+
+Para entender los siguientes ejemplos, es recomendable tener un conocimiento básico de Python. En caso que no conozca las librerías que se utilizan en estas notas recomendamos primero visitar el apéndice {ref}`apendice`.
 
 ### Ejemplo de aprendizaje supervisado
 
@@ -79,6 +131,382 @@ print(f"Error cuadrático medio: {mse:.2f}")
 # Mostrar los coeficientes del modelo
 print("Coeficientes del modelo:", model.coef_)
 ```
+
+Para visualizar el resultado del modelo ajustado, podemos crear un gráfico que compare las predicciones del modelo con los valores reales de la temperatura máxima en el conjunto de prueba. Un gráfico de dispersión es una buena opción para este propósito, ya que permite observar cómo se alinean las predicciones con los valores reales.
+
+A continuación, se muestra cómo crear este gráfico utilizando Matplotlib:
+
+```{code-cell} ipython3
+import matplotlib.pyplot as plt
+
+# Crear un gráfico de dispersión de los valores reales vs. las predicciones
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test, y_pred, color='blue', alpha=0.5, label='Predicciones')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=2, label='Ideal')
+plt.xlabel('Valores Reales')
+plt.ylabel('Predicciones')
+plt.title('Comparación de Predicciones del Modelo de Regresión Lineal')
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+Este ejemplo es un caso clásico de aprendizaje supervisado, un enfoque en el que un modelo se entrena utilizando un conjunto de datos etiquetados. En el aprendizaje supervisado, el objetivo principal es aprender una función que mapea entradas a salidas basándose en ejemplos de pares de entrada-salida proporcionados durante el proceso de entrenamiento. En este caso específico, el conjunto de datos sintético contiene tanto características de entrada como una variable objetivo. Las características de entrada incluyen variables como la temperatura anterior, la humedad, el viento y la precipitación, mientras que la variable objetivo es la temperatura máxima que se desea predecir.
+
+Durante el proceso de entrenamiento, el modelo de regresión lineal utiliza estos pares de entrada-salida para aprender la relación subyacente entre las características de entrada y la variable objetivo. El modelo ajusta sus parámetros, en este caso, los coeficientes de la regresión, con el fin de minimizar la diferencia entre las predicciones del modelo y los valores reales de la variable objetivo. Una vez que el modelo ha sido entrenado, se evalúa en un conjunto de datos de prueba que también contiene entradas y salidas conocidas. El modelo genera predicciones para las entradas del conjunto de prueba, y estas predicciones se comparan con los valores reales para evaluar el rendimiento del modelo.
+
+En resumen, este ejemplo ilustra el aprendizaje supervisado porque el modelo se entrena con datos etiquetados y aprende a predecir la salida, que es la temperatura máxima, a partir de las entradas, que son las características climáticas, basándose en ejemplos previos. Este enfoque permite al modelo generalizar a nuevos datos y realizar predicciones precisas en situaciones similares a las observadas durante el entrenamiento.
+
+### Ejemplo de Aprendizaje No Supervisado: Agrupamiento de Estados Cuánticos
+
+En el ámbito de la física cuántica, uno de los desafíos es clasificar estados cuánticos basados en sus propiedades intrínsecas. Supongamos que tenemos un conjunto de datos que representa diferentes estados cuánticos, caracterizados por ciertas medidas experimentales como la energía, el momento angular y el espín. Sin etiquetas que indiquen a qué categoría pertenece cada estado, el objetivo es identificar patrones o grupos dentro de estos datos que puedan sugerir diferentes tipos de estados cuánticos.
+
+Para abordar este problema, utilizaremos el algoritmo de agrupamiento k-means, una técnica de aprendizaje no supervisado que busca dividir un conjunto de datos en k grupos distintos, donde cada grupo contiene datos similares entre sí.
+
+Generaremos un conjunto de datos sintético que simula las características de los estados cuánticos utilizando la librería `scikit-learn`. 
+```{code-cell} ipython3
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs
+
+# Generar un conjunto de datos sintético
+np.random.seed(42)
+X, _ = make_blobs(n_samples=300, centers=3, cluster_std=0.60, random_state=0)
+```
+
+Luego, utilizando la misma librería aplicaremos el algoritmo k-means para clasificar los datos en grupos. Finalmente, visualizaremos los resultados utilizando Matplotlib para observar cómo se agrupan los estados cuánticos.
+
+```{code-cell} ipython3
+# Aplicar el algoritmo k-means
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(X)
+y_kmeans = kmeans.predict(X)
+
+# Visualizar los resultados
+plt.figure(figsize=(8, 6))
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')
+centers = kmeans.cluster_centers_
+plt.scatter(centers[:, 0], centers[:, 1], c='red', s=200, alpha=0.75, marker='X', label='Centroides')
+plt.title('Agrupamiento de Estados Cuánticos')
+plt.xlabel('Característica 1')
+plt.ylabel('Característica 2')
+plt.legend()
+plt.grid(True)
+plt.show()
+```
+
+En este gráfico, cada punto representa un estado cuántico, y los colores indican el grupo al que pertenece cada estado según el algoritmo k-means. Los centroides de los grupos están marcados con una 'X' roja, indicando el centro de cada grupo identificado. Este ejemplo es un caso de aprendizaje no supervisado porque no se utilizan etiquetas predefinidas para guiar el proceso de agrupamiento. En lugar de ello, el algoritmo identifica patrones y similitudes inherentes en los datos para agruparlos en categorías significativas. Este enfoque es particularmente útil en situaciones donde las etiquetas no están disponibles o son difíciles de definir, permitiendo a los investigadores descubrir estructuras ocultas en los datos que podrían no ser evidentes a simple vista. Ojo, en este ejemplo se fijó el numero de clústers del algoritmo `KMeans` de antemano en 3. Este es un hiper-parámetro del algoritmo, pero suponemos que teníamos alguna información acerca del número de estados cuánticos posibles.
+
+### Ejemplo de aprendizaje por refuerzo: optimización de reactor nuclear
+El aprendizaje por refuerzo es un enfoque poderoso en el aprendizaje automático que se inspira en la forma en que los agentes biológicos aprenden a través de la interacción con su entorno. En el contexto de la física nuclear, uno de los problemas interesantes es la optimización de la configuración de un reactor nuclear para maximizar la producción de energía mientras se minimizan los riesgos y el consumo de combustible. Supongamos que queremos entrenar un agente para ajustar las barras de control en un reactor nuclear, que son dispositivos que absorben neutrones y regulan la reacción en cadena. El objetivo del agente es encontrar la configuración óptima de las barras de control que maximice la eficiencia del reactor.
+
+Para abordar este problema, utilizaremos un entorno simulado donde el agente puede ajustar las posiciones de las barras de control y recibir retroalimentación en forma de recompensas basadas en la eficiencia de la reacción nuclear. Utilizaremos PyTorch para implementar un agente de aprendizaje por refuerzo simple y Matplotlib para visualizar el rendimiento del agente a lo largo del tiempo.
+
+```{code-cell} ipython3
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# Definir el entorno simulado del reactor nuclear
+class NuclearReactorEnv:
+    def __init__(self):
+        self.state = np.random.uniform(0, 1, size=(4,))  # Estado inicial aleatorio
+        self.steps = 0
+
+    def reset(self):
+        self.state = np.random.uniform(0, 1, size=(4,))
+        self.steps = 0
+        return self.state
+
+    def step(self, action):
+        self.state += action 
+        self.state = np.clip(self.state, 0, 1)
+        reward = -np.sum((self.state - 0.5)**2) * 10  # Escalar la recompensa para un mejor aprendizaje
+        self.steps += 1
+        done = self.steps >= 100
+        return self.state, reward, done
+
+# Definir el agente de aprendizaje por refuerzo
+class SimpleAgent(nn.Module):
+    def __init__(self):
+        super(SimpleAgent, self).__init__()
+        self.fc1 = nn.Linear(4, 16)  # Aumentar la complejidad
+        self.fc2 = nn.Linear(16, 4)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        return torch.tanh(self.fc2(x))
+
+# Entrenar el agente
+env = NuclearReactorEnv()
+agent = SimpleAgent()
+optimizer = optim.Adam(agent.parameters(), lr=0.001)  # Ajustar la tasa de aprendizaje
+rewards = []
+
+for episode in range(200):  # Aumentar el número de episodios
+    state = env.reset()
+    total_reward = 0
+    for t in range(100):
+        state_tensor = torch.tensor(state, dtype=torch.float32)
+        action = agent(state_tensor) + torch.randn(4) * 0.1  # Añadir ruido para la exploración
+        next_state, reward, done = env.step(action.detach().numpy())
+        total_reward += reward
+
+        # Calcular el baseline como la media de las últimas 10 recompensas, si están disponibles
+        if len(rewards) >= 10:
+            baseline = np.mean(rewards[-10:])
+        else:
+            baseline = 0  # Baseline por defecto si no hay suficientes recompensas
+
+        # Calcular la pérdida basada en la recompensa y la acción
+        loss = -torch.sum(action) * (reward - baseline)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        state = next_state
+        if done:
+            break
+    rewards.append(total_reward)
+
+# Visualizar el rendimiento del agente
+plt.plot(rewards)
+plt.title('Rendimiento del Agente de Aprendizaje por Refuerzo')
+plt.xlabel('Episodio')
+plt.ylabel('Recompensa Total')
+plt.grid(True)
+plt.show()
+```
+
+En este ejemplo de aprendizaje por refuerzo, hemos implementado un agente que interactúa con un entorno simulado de un reactor nuclear, donde el objetivo es optimizar la configuración de las barras de control para maximizar la eficiencia del reactor. El entorno proporciona un estado inicial aleatorio y permite al agente ajustar las posiciones de las barras de control, recibiendo una recompensa basada en la proximidad del estado del reactor a un estado óptimo. El agente, modelado como una red neuronal simple en PyTorch, aprende a seleccionar acciones que maximicen la recompensa total a través de un enfoque de gradiente de política. En cada paso, el agente toma una acción basada en el estado actual, y la pérdida se calcula como el producto negativo de la recompensa y la suma de las acciones, lo que guía el ajuste de los parámetros del modelo para mejorar el rendimiento en episodios futuros. Este enfoque es un ejemplo de aprendizaje por refuerzo porque el agente aprende a través de la interacción directa con el entorno, sin recibir ejemplos explícitos de entrada-salida como en el aprendizaje supervisado. En su lugar, el agente explora diferentes acciones y utiliza la retroalimentación en forma de recompensas para descubrir una política óptima que maximiza el rendimiento a largo plazo. Este tipo de aprendizaje es particularmente útil en situaciones donde el modelo del entorno es complejo o desconocido, permitiendo al agente adaptarse y mejorar su comportamiento a través de la experiencia.
+
+### Ejemplo de Aprendizaje por Refuerzo: Control de un Péndulo Simple
+
+VER: https://docs.pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+
+
+En este ejemplo, consideramos el problema de controlar un péndulo simple para que se mantenga en posición vertical. El péndulo puede ser empujado hacia la izquierda o hacia la derecha con una fuerza limitada, y el objetivo es aprender una política que mantenga el péndulo lo más cerca posible de la posición vertical. Este problema es un clásico en el aprendizaje por refuerzo y es más sencillo de entender para estudiantes de grado, ya que ilustra cómo un agente puede aprender a controlar un sistema físico mediante la interacción continua con el entorno.
+
+```python
+import gym
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.distributions import Categorical
+import matplotlib.pyplot as plt
+
+# Inicializar el almacentamiento de la recompensa
+recompesa_epoch = []
+
+# definición de la política
+class PolicyNetwork(nn.Module):
+    def __init__(self):
+        super(PolicyNetwork, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(4, 128),
+            nn.ReLU(),
+            nn.Linear(128, 2),
+            nn.Softmax(dim=-1),
+        )
+
+    def forward(self, x):
+        return self.fc(x)
+
+# calcular la pérdida de recompensa 
+def compute_discounted_rewards(rewards, gamma=0.99):
+    discounted_rewards = []
+    R = 0
+    for r in reversed(rewards):
+        R = r + gamma * R
+        discounted_rewards.insert(0, R)
+    discounted_rewards = torch.tensor(discounted_rewards)
+    discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (discounted_rewards.std() + 1e-5)
+    return discounted_rewards
+
+# Loop de entrenamiento 
+def train(env, policy, optimizer, episodes=1000):
+    for episode in range(episodes):
+        state = env.reset()
+        log_probs = []
+        rewards = []
+        done = False
+
+        while not done:
+            state = torch.FloatTensor(state).unsqueeze(0)
+            probs = policy(state)
+            m = Categorical(probs)
+            action = m.sample()
+            state, reward, done, _ = env.step(action.item())
+
+            log_probs.append(m.log_prob(action))
+            rewards.append(reward)
+            # Inside the train function, after an episode ends:
+
+            if done:
+                episode_rewards.append(sum(rewards))
+                discounted_rewards = compute_discounted_rewards(rewards)
+                policy_loss = []
+                for log_prob, Gt in zip(log_probs, discounted_rewards):
+                    policy_loss.append(-log_prob * Gt)
+                optimizer.zero_grad()
+                policy_loss = torch.cat(policy_loss).sum()
+                policy_loss.backward()
+                optimizer.step()
+
+                if episode % 50 == 0:
+                    print(f"Episode {episode}, Total Reward: {sum(rewards)}")
+                break
+
+env = gym.make('CartPole-v1')
+policy = PolicyNetwork()
+optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+
+train(env, policy, optimizer)
+
+plt.plot(episode_rewards)
+plt.title('Training Reward Over Episodes')
+plt.xlabel('Episode')
+plt.ylabel('Total Reward')
+plt.show()
+```
+
+
+![](https://docs.pytorch.org/tutorials/_images/cartpole.gif)
+
+
+En este ejemplo, hemos implementado un agente de aprendizaje por refuerzo que aprende a controlar un péndulo simple para mantenerlo en posición vertical. El entorno simula el comportamiento físico del péndulo, donde el agente puede aplicar un torque limitado para influir en su movimiento. La recompensa está diseñada para penalizar grandes desviaciones del ángulo vertical, así como velocidades angulares altas y el uso excesivo de torque. A través de la interacción continua con el entorno, el agente ajusta sus acciones para maximizar la recompensa total, aprendiendo así a mantener el péndulo en equilibrio. Este ejemplo ilustra de manera sencilla cómo el aprendizaje por refuerzo puede aplicarse a problemas de control en física, permitiendo que un agente descubra estrategias óptimas mediante la experimentación y la retroalimentación.
+
+### Funciones de costo 
+
+#### Clasificación 
+
+#### Regresión 
+
+### Optimizadores
+
+#### Descenso por el gradiente estocástico (SGD)
+
+#### Adam
+
+## De la regresión lineal a las redes neuronales
+
+La transición de la regresión lineal a las redes neuronales representa un avance significativo en la capacidad de los modelos para capturar y aprender patrones complejos en los datos. La regresión lineal es uno de los métodos más básicos y ampliamente utilizados en el aprendizaje automático. Se basa en la idea de encontrar una relación lineal entre las variables de entrada y la variable de salida, ajustando un hiperplano en un espacio de características que minimiza el error cuadrático medio entre las predicciones y los valores reales. Aunque es eficaz para problemas donde la relación entre las variables es aproximadamente lineal, su capacidad para modelar interacciones no lineales es limitada. Esto restringe su aplicabilidad en escenarios donde los datos presentan relaciones más complejas.
+
+Las redes neuronales, por otro lado, son modelos inspirados en el funcionamiento del cerebro humano, capaces de aprender representaciones jerárquicas de los datos. A diferencia de la regresión lineal, las redes neuronales consisten en múltiples capas de nodos (o neuronas), donde cada capa puede aprender diferentes niveles de abstracción. Las capas ocultas permiten a las redes neuronales capturar interacciones no lineales entre las variables de entrada, lo que las hace extremadamente poderosas para una amplia gama de aplicaciones, desde el reconocimiento de imágenes hasta el procesamiento del lenguaje natural. La capacidad de las redes neuronales para aproximar funciones complejas las convierte en una herramienta esencial en el aprendizaje profundo, donde se busca modelar fenómenos intrincados y extraer patrones significativos de grandes volúmenes de datos. Esta evolución desde la regresión lineal hacia las redes neuronales ha sido fundamental para el desarrollo de técnicas avanzadas de inteligencia artificial que hoy en día están transformando múltiples industrias.
+
+El perceptrón multicapa, también conocido como MLP (por sus siglas en inglés, Multi-Layer Perceptron), es una extensión del perceptrón simple que permite a las redes neuronales aprender y representar funciones más complejas. Mientras que un perceptrón simple consiste en una sola capa de nodos de entrada conectados directamente a una salida, el perceptrón multicapa introduce una o más capas ocultas entre la capa de entrada y la capa de salida. Estas capas ocultas permiten al MLP capturar relaciones no lineales en los datos, lo que lo hace mucho más poderoso y versátil.
+
+Matemáticamente, un MLP se compone de múltiples capas de neuronas, donde cada neurona en una capa está conectada a todas las neuronas de la capa siguiente. Cada conexión tiene un peso asociado, y cada neurona tiene un sesgo. La salida de una neurona se calcula como una función de activación aplicada a la suma ponderada de sus entradas más el sesgo. Para una neurona $j$ en una capa oculta, la salida $h_j$ se puede expresar como:
+
+$$
+h_j = f\left(\sum_{i=1}^{n} w_{ij} x_i + b_j\right)
+$$
+
+donde  $x_i$ son las entradas a la neurona, $w_{ij}$ son los pesos de las conexiones, $b_j$ es el sesgo, y $f$ es la función de activación, que introduce no linealidad en el modelo. Comúnmente, se utilizan funciones de activación como la sigmoide, la tangente hiperbólica o la ReLU (Rectified Linear Unit).
+
+La capa de salida del MLP produce la predicción final del modelo. Si el MLP se utiliza para clasificación, la capa de salida suele aplicar una función de activación como softmax para convertir las salidas en probabilidades. El entrenamiento de un MLP implica ajustar los pesos y sesgos para minimizar una función de pérdida, que mide la discrepancia entre las predicciones del modelo y los valores reales. Este ajuste se realiza mediante un proceso iterativo conocido como retropropagación, que utiliza el descenso de gradiente para actualizar los pesos en función de los gradientes de la función de pérdida con respecto a los pesos.
+
+El perceptrón multicapa es un componente fundamental en el aprendizaje profundo, ya que forma la base de arquitecturas más complejas como las redes neuronales convolucionales y las redes neuronales recurrentes. Su capacidad para aprender representaciones jerárquicas de los datos lo convierte en una herramienta poderosa para abordar problemas de aprendizaje automático que involucran patrones complejos y no lineales.
+
+Para ilustrar el concepto de un perceptrón multicapa (MLP) utilizando PyTorch, consideremos un ejemplo sencillo de clasificación de datos generados sintéticamente. Supongamos que queremos clasificar puntos en un plano en dos categorías distintas. Utilizaremos un MLP con una capa oculta para aprender esta tarea de clasificación.
+
+Primero, generamos un conjunto de datos sintético utilizando `make_moons` de Scikit-learn, que crea dos grupos de datos en forma de media luna. Estos datos no son linealmente separables, lo que hace que un MLP sea una opción adecuada para la clasificación.
+
+```{code-cell} ipython3
+import numpy as np
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.datasets import make_moons
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Generar datos sintéticos
+X, y = make_moons(n_samples=1000, noise=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Escalar los datos
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Convertir los datos a tensores de PyTorch
+X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+y_train_tensor = torch.tensor(y_train, dtype=torch.long)
+X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+y_test_tensor = torch.tensor(y_test, dtype=torch.long)
+
+# Definir el modelo de perceptrón multicapa
+class MLP(nn.Module):
+    def __init__(self):
+        super(MLP, self).__init__()
+        self.hidden = nn.Linear(2, 10)  # Capa oculta con 10 neuronas
+        self.output = nn.Linear(10, 2)  # Capa de salida con 2 neuronas (para 2 clases)
+
+    def forward(self, x):
+        x = torch.relu(self.hidden(x))
+        x = self.output(x)
+        return x
+
+# Crear el modelo, definir la función de pérdida y el optimizador
+model = MLP()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+# Entrenar el modelo
+num_epochs = 300
+for epoch in range(num_epochs):
+    optimizer.zero_grad()
+    outputs = model(X_train_tensor)
+    loss = criterion(outputs, y_train_tensor)
+    loss.backward()
+    optimizer.step()
+
+    if (epoch + 1) % 20 == 0:
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+
+# Evaluar el modelo
+with torch.no_grad():
+    outputs = model(X_test_tensor)
+    _, predicted = torch.max(outputs, 1)
+    accuracy = (predicted == y_test_tensor).sum().item() / y_test_tensor.size(0)
+    print(f'Accuracy: {accuracy:.4f}')
+
+# Crear una malla de puntos para visualizar la frontera de decisión
+h = 0.02  # Paso en la malla
+x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
+y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+grid = np.c_[xx.ravel(), yy.ravel()]
+grid_scaled = scaler.transform(grid)
+grid_tensor = torch.tensor(grid_scaled, dtype=torch.float32)
+
+# Predecir las clases para cada punto en la malla
+with torch.no_grad():
+    Z = model(grid_tensor)
+    _, Z = torch.max(Z, 1)
+    Z = Z.numpy().reshape(xx.shape)
+
+# Visualizar los resultados
+plt.figure(figsize=(8, 6))
+plt.contourf(xx, yy, Z, alpha=0.3, cmap='viridis')
+plt.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap='viridis', marker='o', edgecolor='k', s=50)
+plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap='viridis', marker='x', s=30, alpha=0.6)
+plt.title('Clasificación del Perceptrón Multicapa')
+plt.xlabel('Característica 1')
+plt.ylabel('Característica 2')
+plt.show()
+```
+
+En este ejemplo, hemos definido un MLP con una capa oculta que contiene 10 neuronas y una capa de salida con 2 neuronas, correspondiente a las dos clases de nuestro problema de clasificación. La función de activación ReLU se utiliza en la capa oculta para introducir no linealidad en el modelo. Durante el entrenamiento, el modelo ajusta sus pesos para minimizar la función de pérdida de entropía cruzada, que mide la discrepancia entre las predicciones del modelo y las etiquetas reales. Utilizamos el optimizador Adam para actualizar los pesos de manera eficiente.
+
+Después del entrenamiento, evaluamos el modelo en un conjunto de prueba y calculamos la precisión de las predicciones. Finalmente, visualizamos los resultados de la clasificación en un gráfico de dispersión, donde los puntos están coloreados según la clase predicha por el modelo. Este ejemplo demuestra cómo un perceptrón multicapa puede aprender a clasificar datos no linealmente separables, aprovechando su capacidad para capturar patrones complejos en los datos.
+
+
 
 ```{bibliography} ./references.bib
 :style: unsrt

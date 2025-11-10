@@ -1,3 +1,15 @@
+---
+jupytext:
+  cell_metadata_filter: -all
+  formats: md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
 # Material del curso **Aprendizaje Profundo Basado en la Física**
 
 Autor: Dr. José I. Robledo - [página personal](https://jorobledo.github.io/)
@@ -22,4 +34,5 @@ Este libro de apuntes no solo pretende ser una guía académica, sino también u
 ## Índice
 
 ```{tableofcontents}
+:depth: 2
 ```
