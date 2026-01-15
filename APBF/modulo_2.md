@@ -22,6 +22,17 @@ El aprendizaje profundo ha demostrado ser una herramienta poderosa para abordar 
 
 Las PINNs representan un enfoque innovador que combina el poder del aprendizaje profundo con principios físicos bien establecidos. A diferencia de los modelos tradicionales de aprendizaje profundo, que dependen exclusivamente de grandes volúmenes de datos para aprender patrones, las PINNs incorporan ecuaciones diferenciales parciales (PDEs) y otras leyes físicas directamente en el proceso de entrenamiento. Esto no solo mejora la capacidad del modelo para generalizar a partir de datos limitados, sino que también garantiza que las predicciones respeten las restricciones físicas inherentes al problema. La motivación para avanzar hacia las PINNs radica en su potencial para resolver problemas complejos en áreas como la dinámica de fluidos, la mecánica cuántica y la biología computacional, donde las simulaciones precisas y eficientes son cruciales. Al integrar el conocimiento físico en el aprendizaje profundo, las PINNs ofrecen una nueva perspectiva para abordar desafíos científicos, permitiendo modelos que no solo son precisos, sino también interpretables y consistentes con las leyes de la naturaleza.
 
+En el aprendizaje profundo basado en la física, se extiende la idea de función de costo de manera natural. En este caso, se combinan términos asociados a los datos con términos que miden el incumplimiento de las leyes físicas, típicamente expresadas mediante ecuaciones diferenciales, condiciones iniciales y de frontera, o principios variacionales. De forma esquemática, la función de costo adopta la forma 
+
+$$
+\mathcal{L} = \mathcal{L}_{\text{datos}} + \lambda \mathcal{L}_{\text{física}}
+$$
+
+donde el segundo término penaliza las desviaciones respecto a las ecucaciones que gobiernan el sistema y $\lambda$ controla elbalance entre ajuste a los datos y la consistencia física de la solución. 
+
+Este enfoque unifica el aprendizaje automática con el modelado físico en un único marco de optimización, en el que las redes neuronales actúan como aproximadores universales, mientras que la función de costo garantiza que las soluciones aprendidas respeten la estructura fundamental del problema en cuestión. 
+
+
 ## Evolución de aprendizaje automático a aprendizaje profundo
 
 
