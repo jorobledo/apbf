@@ -381,15 +381,217 @@ En este ejemplo, hemos implementado un agente de aprendizaje por refuerzo que ap
 
 ### Funciones de costo 
 
+La función de costo cuantifica el grado de discrepancia en las predicciones del modelo propuesto y la información disponible (ya sea en forma de datos observados, etiquetas conocidas, etc.).
+
+Una función de costo $\mathcal{L}(\theta)$ es una función escalar que depende de los parámetros del modelo $\theta$. El entrenamiento de un modelo de aprendizaje automático consiste en resolver un problema de optimización, típicamente no lineal y de dimensionalidad alta, en la que se busca minimizar dicha función. Es decir, se busca $\theta^{*}$ tal que
+
+$$
+\theta^{*} = \text{arg min}_{\theta} \mathcal{L}(\theta)
+$$
+
+La elección de la función de costo resulta un elemento central del diseño de cualquier algoritmo de aprendizaje, ya que define qué significa "aprender" en el contexto del problema considerado. 
+
+Más allá de medir errores respecto a datos, las funciones de costo pueden incorporar *conocimiento previo* sobre el sistema que se desea modelar. Esto se logra añadiendo términos que penalizan comportamientos no deseados o que refuerzan propiedades estructurales específicas, como simetrías, conservación de magnitudes o cumplimiento de restricciones o constraints físicos. Desde esta prespectiva es que la función de costo deja de ser un mero instrumento técnico y permite codificar hipótesis sobre la realidad subyacente. En los modelos actuales de aprendizaje profundo, esta flexibilidad resulta clave para abordar problemas complejos con datos escasos o ruidosos.
+
+En lo que sigue introduciré a algunas funciones de costo clásicas que luego utilizaremos a lo largo del curso. Sin embargo, este resúmen no intenta ser completo sino proveer de ideas para que luego puedan desarrollar sus propias funciones de costo. Grandes saltos en innovación en modelos de aprendizaje automático se han dado a partir de plantear nuevas funciones de costo apropiadas al problema de interés. 
+
 #### Clasificación 
+
+En los problemas de clasificación, el objetivo del modelo es asignar una observación de entrada ($x$) a una o varias clases discretas. Las funciones de costo cuantifican la discrepancia entre la predicción del modelo y la etiqueta verdadera, y están estrechamente relacionadas con interpretaciones probabilísticas y criterios de decisión óptimos.
+
+La **pérdida 0–1** es la función de costo conceptualmente más simple. Penaliza cualquier clasificación incorrecta con un valor unitario, sin tener en cuenta el grado de confianza del modelo.
+
+$$
+\mathcal{L}_{0\text{-}1}(y, \hat{y}) =
+\begin{cases}
+0, & \text{si } y = \hat{y}, \\
+1, & \text{si } y \neq \hat{y}.
+\end{cases}
+$$
+
+Aunque es una métrica natural para evaluar clasificadores, no es diferenciable y, por tanto, no resulta adecuada para el entrenamiento mediante métodos basados en gradiente.
+
+La **entropía cruzada binaria** (también conocida como log-loss, o pérdida logística) resulta útil cuando el modelo produce una probabilidad ($p = P(y=1 \mid x)$), y se define como
+
+$$
+\mathcal{L}_{\text{log}}(y, p)
+= -\left[ y \log(p) + (1-y)\log(1-p) \right],
+$$
+
+donde $y \in \{0,1\}$. Esta función se deriva del principio de máxima verosimilitud asumiendo un modelo Bernoulli y es convexa respecto a $p$. Penaliza fuertemente las predicciones confiadas ($p$ grande) pero incorrectas.
+
+En clasificación multiclase con $K$ clases mutuamente excluyentes, se emplea típicamente la función **softmax** para obtener probabilidades
+
+$$
+p_k = \frac{e^{z_k}}{\sum_{j=1}^K e^{z_j}},
+$$
+
+donde $z_k$ son los logits ($\frac{p}{1-p}$) del modelo. La entropía cruzada categórica se define como
+
+$$
+\mathcal{L}_{\text{CE}}(y, p)
+= -\sum_{k=1}^K y_k \log(p_k),
+$$
+
+donde $y_k$ es una codificación one-hot de la clase verdadera. Esta pérdida mide la divergencia entre la distribución verdadera y la predicha, y es el estándar en redes neuronales para clasificación multiclase.
+
+
+En problemas de clasificación *multietiqueta*, donde cada instancia puede pertenecer simultáneamente a varias clases, se aplica la entropía cruzada binaria de manera independiente a cada etiqueta:
+
+$$
+\mathcal{L}_{\text{BCE}}(y, p)
+= -\sum_{k=1}^K \left[ y_k \log(p_k) + (1-y_k)\log(1-p_k) \right],
+$$
+
+donde $y_k \in \{0,1\}$ indica la presencia o ausencia de la etiqueta $k$.
+
 
 #### Regresión 
 
-### Optimizadores
+En los problemas de regresión, el objetivo del modelo es aproximar una variable continua $y \in \mathbb{R}$ a partir de una entrada $x$. Las funciones de costo cuantifican el error entre la predicción $\hat{y} = f(x)$ del modelo y el valor real observado, y su elección determina las propiedades estadísticas y numéricas del estimador aprendido.
 
-#### Descenso por el gradiente estocástico (SGD)
+El **error cuadrático medio** es la función de costo más común en regresión. Se define como
 
-#### Adam
+$$
+\mathcal{L}_{\text{MSE}}(y, \hat{y})
+= \frac{1}{N} \sum_{i=1}^N \left(y_i - \hat{y}_i\right)^2.
+$$
+
+Esta función penaliza de forma cuadrática los errores grandes y es diferenciable en todo su dominio. Desde un punto de vista estadístico, equivale a maximizar la verosimilitud bajo el supuesto de ruido gaussiano con varianza constante.
+
+El **error absoluto medio** mide la desviación promedio en valor absoluto entre la predicción y el valor real:
+
+$$
+\mathcal{L}_{\text{MAE}}(y, \hat{y})
+= \frac{1}{N} \sum_{i=1}^N \left| y_i - \hat{y}_i \right|.
+$$
+
+Esta función es más robusta frente a valores atípicos que el MSE, aunque no es diferenciable en $y_i = \hat{y}_i$, lo que puede dificultar su optimización en algunos contextos.
+
+En situaciones donde las observaciones tienen distinta confiabilidad, se utiliza una versión *ponderada* del MSE:
+
+$$
+\mathcal{L}_{\text{WMSE}}(y, \hat{y})
+= \frac{1}{N} \sum_{i=1}^N w_i \left(y_i - \hat{y}_i\right)^2,
+$$
+
+donde $w_i > 0$ representa el peso asociado a la observación $i$. Este enfoque es habitual cuando se dispone de estimaciones de la varianza del ruido.
+
+La **pérdida de Huber** combina las ventajas del MSE y del MAE, siendo cuadrática para errores pequeños y lineal para errores grandes:
+
+$$
+\mathcal{L}_{\text{Huber}}(y, \hat{y}) =
+\begin{cases}
+\frac{1}{2}(y - \hat{y})^2, & \text{si } |y - \hat{y}| \le \delta, \\
+\delta |y - \hat{y}| - \frac{1}{2}\delta^2, & \text{si } |y - \hat{y}| > \delta,
+\end{cases}
+$$
+
+donde $\delta$ es un parámetro que controla el punto de transición. Esta pérdida es ampliamente utilizada por su robustez y buenas propiedades de optimización.
+
+Otro ejemplo interesante de función de costo es la **pérdida log-cosh** se define como
+
+$$
+\mathcal{L}_{\text{log-cosh}}(y, \hat{y})
+= \frac{1}{N} \sum_{i=1}^N \log\left(\cosh(y_i - \hat{y}_i)\right).
+$$
+
+Para errores pequeños se comporta de manera similar al MSE, mientras que para errores grandes crece aproximadamente de forma lineal, lo que la hace robusta frente a outliers y completamente diferenciable.
+
+
+Una familia general de funciones de costo en regresión está dada por la norma $L_p$:
+
+$$
+\mathcal{L}_{p}(y, \hat{y})
+= \frac{1}{N} \sum_{i=1}^N |y_i - \hat{y}_i|^p,
+$$
+
+donde $p \ge 1$. Los casos $p=1$ y $p=2$ corresponden al MAE y al MSE, respectivamente. El valor de $p$ controla el compromiso entre robustez y sensibilidad a errores grandes.
+
+### Optimizadores 
+
+Para entrenar un modelo de aprendizaje automático, es decesario proveer o alimentar de datos al modelo y observar la salida, comparar la salida con lo esperado mediante la función de costo y decidir con cierto criterio cómo modificar los parámetros del modelo para que en la siguiente iteración de alimentar los datos y evaluar se obtenga un valor de función de costo menor. Este proceso se repite iterativamente hasta que la función de costo ya no se puede minimizar más o no se observan cambios sustanciales de la función de costo luego de una determinada cantidad de iteraciones. El algoritmo que decide *cómo* modificar los parámetros del modelo se le llama **optimizador** y es el responsable del aprendizaje del modelo.
+
+Cabe mencionar que no es necesario pasar *todos* los datos al modelo para calcular el valor de la función de costo. Esto es posible, pero costoso computacionalmente y lento ya que un paso de optimización de parámetros se dará por vuelta entera de los datos por el modelo (si la cantidad de datos es importante, esto se vuelve lento) y a su vez, la decisión de hacia dónde optimizar estará promediada sobre toda la variabilidad en el conjunto de datos, lo que hará tomar una decisión suavizada, que probablemente converga lentamente (o no permita salir de mínimos locales). Es por esto que se estila entrenar en mini-batches, conjuntos de 32, 64, 128, 256 o más datos por evaluación de la función de costo y toma de decisión del optimizador. De este modo, la optimización se va llevando a cabo más frecuentemente, de manera un poco más aleatoria, pero permitiendo la exploración del espacio de parámetros más exhaustiva. Una vez que el modelo vio todos los datos, se vuelve a repetir el proceso. Cada vez que todos los datos pasan por el modelo (varias instancias de optimización de los parámetros mediante el concepto de mini-batches) se llama una época y los modelos suelen entrenarse por varias épocas. 
+
+Respecto al problema de optimización planteado en la sección de función de costo, el gran número de parámetros, la no convexidad de la función objetivo y el uso de grandes volúmenes de datos hacen que los métodos clásicos de optimización determinista resultan impracticables. En este contexto, los **optimizadores basados en gradiente estocástico** constituyen el estándar para la optimización de funciones de costo en problemas de aprendizaje automático profundo.
+
+A continuación describiré algunos de los optimizadores más utilizados al momento, aclarando que existen distintas versiones y algunos algoritmos que no presento aquí. Para una descripción más detallada, ver {cite}`bishop2023deep`.
+
+#### Descenso por gradiente estocástico (SGD)
+
+El descenso por gradiente estocástico es la base conceptual de la mayoría de los optimizadores modernos. En su forma más simple, actualiza los parámetros en la dirección opuesta al gradiente de la función de costo, estimado sobre un mini-batch de datos:
+
+$$
+\theta_{t+1} = \theta_t - \eta \nabla_\theta \mathcal{L}_t(\theta_t),
+$$
+
+donde $\eta > 0$ es la tasa de aprendizaje y $\nabla_\theta \mathcal{L}_t$ representa el gradiente calculado en el paso $t$.
+
+SGD es simple, eficiente en memoria y presenta buenas propiedades de generalización. Sin embargo, puede converger lentamente y ser sensible a la elección de la tasa de aprendizaje, especialmente en funciones de costo mal condicionadas.
+
+#### SGD con momento (Momentum)
+
+El método de momento introduce una variable auxiliar $v_t$ que acumula una media exponencial de los gradientes pasados, reduciendo oscilaciones y acelerando la convergencia en direcciones consistentes:
+
+$$
+v_t = \mu v_{t-1} + \nabla_\theta \mathcal{L}_t(\theta_t),
+$$
+
+$$
+\theta_{t+1} = \theta_t - \eta v_t,
+$$
+
+donde $\mu \in [0,1)$ es el coeficiente de momento.
+
+Este enfoque puede interpretarse como una analogía física, en la que los parámetros se mueven con inercia sobre el paisaje de la función de costo, lo que resulta especialmente eficaz en valles alargados y superficies anisotrópicas.
+
+#### RMSProp
+
+RMSProp es un optimizador adaptativo que ajusta de forma automática la tasa de aprendizaje de cada parámetro en función de la magnitud reciente de sus gradientes. Mantiene una media móvil del cuadrado del gradiente:
+
+$$
+s_t = \rho s_{t-1} + (1-\rho)\left(\nabla_\theta \mathcal{L}_t(\theta_t)\right)^2,
+$$
+
+y actualiza los parámetros según
+
+$$
+\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{s_t + \epsilon}} \nabla_\theta \mathcal{L}_t(\theta_t),
+$$
+
+donde $\rho \in [0,1)$ es el factor de decaimiento y $\epsilon$ es un término pequeño para garantizar estabilidad numérica.
+
+RMSProp es especialmente útil en problemas no estacionarios y cuando las escalas de los gradientes difieren significativamente entre parámetros.
+
+####  Adam (Adaptive Moment Estimation)
+
+Adam combina las ideas de momento y escalado adaptativo del gradiente. Mantiene estimaciones de primer y segundo orden del gradiente:
+
+$$
+m_t = \beta_1 m_{t-1} + (1-\beta_1)\nabla_\theta \mathcal{L}_t(\theta_t),
+$$
+
+$$
+v_t = \beta_2 v_{t-1} + (1-\beta_2)\left(\nabla_\theta \mathcal{L}_t(\theta_t)\right)^2,
+$$
+
+junto con correcciones por sesgo debidas a la inicialización:
+
+$$
+\hat{m}_t = \frac{m_t}{1-\beta_1^t}, \quad
+\hat{v}_t = \frac{v_t}{1-\beta_2^t}.
+$$
+
+La actualización final de los parámetros es
+
+$$
+\theta_{t+1} = \theta_t - \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t + \epsilon}}.
+$$
+
+Adam ofrece una convergencia rápida y estable en una amplia gama de problemas, lo que explica su uso generalizado como optimizador por defecto en aprendizaje profundo. No obstante, en algunos casos puede mostrar peores propiedades de generalización que SGD con momento.
+
+La elección del optimizador tiene un impacto directo en la velocidad de convergencia, la estabilidad numérica y la capacidad de generalización del modelo. Mientras que Adam y RMSProp son preferidos por su robustez y facilidad de uso, SGD con momento sigue siendo una opción de referencia cuando se prioriza el control fino del proceso de entrenamiento y el desempeño en generalización. En contextos como el aprendizaje profundo basado en la física, la interacción entre la función de costo y el optimizador adquiere un papel central, ya que términos físicos pueden introducir escalas y rigideces adicionales en el problema de optimización.
 
 ## De la regresión lineal a las redes neuronales
 
