@@ -263,3 +263,46 @@ show_state(grid_u, "After Training")
 Las redes neuronales soportan inherentemente el cálculo de las derivadas con respecto al vector de entrada. La derivada $\partial f / \partial \theta$ es un ingrediente fundamental para aprender por el descenso por el gradiente. 
 
 Si el vector de entrada es $\vec{x}$ -->
+
+## Física diferenciable
+
+En esta sección vamos a explorar la posibilidad de incorporar simulaciones numéricas diferenciables al proceso de aprendizaje, lo cuál abreviaremos como física diferenciable (FD). 
+
+
+El objetivo central de esta metodología es aprovechar los algorítmos numéricos existentes para resolver ecuaciones diferenciales para mejorar los sistemas de inteligencia artificial. Para esto, resulta necesario equipar a los sistemas de IA con la funcionalidad de calcular los gradientes con respecto a sus entradas. Una vez que hacemos esto para todos los opoeradores de una simulación, podemos utilizar la diferenciación automática {cite}`baydin2018automatic` a nuestro favor junto con la retropropagación para permitir que la información del gradiente fluya del simulador a la red neuronal y viceversa. 
+
+En contraste con las PINNs propuestas anteriormente, esto permite manejar espacios de soluciones más complejos, sin necesidad de aprender para un problema inverso específico como hicimos anteriormente. La física diferenciable permite entrenar redes neuronales que aprender a aproximar soluciones a un conjunto mayor de problemas inversos de manera más eficiente. 
+
+
+### Operadores diferenciables
+
+En FD trabajamos encima de solvers numéricos existentes. Depende fuertemente en los algoritmos computacionales ya disponibles en cada área de la física. Para comenzar, necesitamos una formulación contínua como modelo para el efecto física que queremos simular. 
+
+Asumimos que tenemos una formulación contínua $\mathcal{P}^*(\vec{u}, \nu)$ de la cantidad física de interés $\vec{u}(\vec{u},t) : \mathbb{R}^d\times \mathbb{R}^+ \rightarrow \mathbb{R}^d$, con parámetros de modelo $\nu$ (por ejemplo, constante de difusión, viscocidad, conductividad, etc.). Las componentes de $u$ estarán denotadas por un  un sub-índice $i$ ($\vec{u}=(u_1,\dots ,u_d)^T$). Típicamente estamos interesados en la evolución temporal de \vec{u}. Discretizamos en intervalos de tiempo $\Delta t$ y esto resulta en una formulación $\mathcal{P}(\vec{u},\nu)$. El estado a tiempo $t+\Delta t$ se computa mediante la secuencia de operadores $\vec{\mathcal{P}_1, \mathcal{P}_2, \dots, \mathcal{P}_m}$ de tal manera que $\vec{u}(t+\Delta t) = \mathcal{P}_m \circ \dots \circ \mathcal{P}_2 \circ \mathcal{P}_1(\vec{u}(t), \nu)$, donde $\circ$ denota la composición de funcioines, i.e. $f\circ g(x) = f(g(x))$. 
+
+Para incorporar este solver numérico al proces de aprendizaje profundo, necesitamos contar con el gradiente de cada operador $\mathcal{P}_i$ con respecto a sus inputs, i.e. $\partial \mathcal{P}_i/\partial \vec{u}$. Notar que no necesitamos siempre las derivadas con respecto a todos los parámetros (por ejemplo tal vez no queremos optimizar con respecto de $\nu$), con lo cual se pueden omitir ciertas derivadas. En lo que sigue asumimos que $\nu$ es un parámetro del modelo, pero que no va a ser una de las salidas de nuestra red neuronal, para evitar pasar $\partial \mathcal{P}_i/\partial \vec{\nu}$ a nuestro solver numérico.
+
+### Jacobianos
+
+Como típicamente $\vec{u}$ es un vector, $\partial \mathcal{P}_i/\partial \vec{u}$ denota una matriz Jacobiana $J$ en vez de un único valor, i.e. 
+
+$$
+\frac{\partial \mathcal{P}_i}{\partial \vec{u}} = \nabla_{\vec{u}}\mathcal{P}_i = \begin{bmatrix} 
+    \partial \mathcal P_{i,1} / \partial u_{1} 
+    & \  \cdots \ &
+    \partial \mathcal P_{i,1} / \partial u_{d} 
+    \\
+    \vdots & \ & \ 
+    \\
+    \partial \mathcal P_{i,d} / \partial u_{1} 
+    & \  \cdots \ &
+    \partial \mathcal P_{i,d} / \partial u_{d} 
+    \end{bmatrix},
+$$
+en donde $d$ denota el número de componentes de $\vec{u}$. En este caso, como $\mathcal{P}$ mapea un valor de $\vec{u}$ a otro valor de de $\vec{u}$, el jacobiano es cuadrado, pero podría ser que este no sea el caso sin traer ningún tipo de problema a la metodología propuesta. 
+
+Ahora utilizaremos el modo reverso de diferenciación automática y nos centraremos en computar un producto vectorial de matrices entre la transpuesta del jacobiano y un vector $\vec{a}$, .i.e. $\left(\frac{\partial \mathcal{P}_i}{\partial \vec{u}}\right)^T \vec{a}$. Si tuviesemos que construir y almacenar toda matriz jacobiana que necesitamos durante el entrenamiento causaría mucho uso de memoria y relentizaría el proceso de entrenamiento innecesariamente. En vez de eso, en la retropropagación, podemos computar productos con el jacobiano más rápidos porque siempre tenemos una función escalar de costo al final de la cadena. 
+
+```{bibliography}
+:style: unsrt
+:filter: docname in docnames
