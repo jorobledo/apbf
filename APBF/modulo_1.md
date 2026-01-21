@@ -709,7 +709,6 @@ En este ejemplo, hemos definido un MLP con una capa oculta que contiene 10 neuro
 Después del entrenamiento, evaluamos el modelo en un conjunto de prueba y calculamos la precisión de las predicciones. Finalmente, visualizamos los resultados de la clasificación en un gráfico de dispersión, donde los puntos están coloreados según la clase predicha por el modelo. Este ejemplo demuestra cómo un perceptrón multicapa puede aprender a clasificar datos no linealmente separables, aprovechando su capacidad para capturar patrones complejos en los datos.
 
 
-
-```{bibliography} ./references.bib
+```{bibliography}
 :style: unsrt
-```
+:filter: docname in docnames

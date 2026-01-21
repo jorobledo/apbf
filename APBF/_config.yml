@@ -43,3 +43,5 @@ sphinx:
   config:
     numfig: true
     numfig_secnum_depth: 3
+    bibtex_bibfiles: ["references.bib"]
+

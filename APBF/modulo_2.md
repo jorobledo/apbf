@@ -44,9 +44,9 @@ En lo que continúa revisaremos algunos de los conceptos para mí más important
 
 ### Diferenciación Automática y retropropagación
 
-Como he mencionado anteriormente, el entrenamiento de modelos de aprendizaje automático profundo se basa en el cálculo eficiente del gradiente de la función (escalar) de costo $\mathcal{L}(\theta)$ con respecto a un gran número de parámetros $\theta$, i.e. $\theta \in \mathbf{R}^n$ con $n$ grande. Los algoritmos de optimización requieren el gradiente $\nabla_{\theta}\mathcal{L}$ para actualizar los parámetros de forma iterativa, pero el cálculo manual de estos gradientes resulta impracticable para modelos reales. 
+Como he mencionado anteriormente, el entrenamiento de modelos de aprendizaje automático profundo se basa en el cálculo eficiente del gradiente de la función (escalar) de costo $\mathcal{L}(\theta)$ con respecto a un gran número de parámetros $\theta$, i.e. $\theta \in \mathbb{R}^n$ con $n$ grande. Los algoritmos de optimización requieren el gradiente $\nabla_{\theta}\mathcal{L}$ para actualizar los parámetros de forma iterativa, pero el cálculo manual de estos gradientes resulta impracticable para modelos reales. 
 
-La **diferenciación automática** (Autograd) es una técnica computacional que permite calcular derivadas exactas (hasta la precisión de la máquina) de funciones definidas programáticamente de manera eficiente y sistemática. A diferencia de la diferenciación simbólica o de la numérica, la automática o autograd se basa en la aplicación repetida de la regla de la cadena sobre operaciones elementales.
+La **diferenciación automática** (Autograd) {cite}`baydin2018automatic` es una técnica computacional que permite calcular derivadas exactas (hasta la precisión de la máquina) de funciones definidas programáticamente de manera eficiente y sistemática. A diferencia de la diferenciación simbólica o de la numérica, la automática o autograd se basa en la aplicación repetida de la regla de la cadena sobre operaciones elementales.
 
 La base del Autograd es el grafo computacional. Cualquier función implementada como una secuencia de operaciones elementales (suma, producto, exponencial, etc.) puede representarse como un grafo dirigido acíclico donde los nodos representan operaciones o variables intermedias y las aristas representan dependencias funcionales. Por ejemplo, $f(x,y)=xy + sin(x)$ puede considerarse como $f(a,b)=z=a+b$ con $a=xy$ y $b=sin(x)$ y el grafo puede ser representado como se muestra en la siguiente figura.
 
@@ -687,6 +687,6 @@ plt.show()
 Las predicciones mostradas en este gráfico se hicieron sobre un conjunto $x$ que incluye partes dentro del dominio de entrenamiento pero también fuera. Todos los valores por debajo de $-2$ son extrapolación de los modelos. Agregué también el modelo analítico $y=exp(x)$ que es el resultado esperado o verdad absoluta. Vemos que el hecho de incluir el constraint de positividad hace que la capacidad del modelo sea mejor y tenga el comportamiento esperado fuera del rango de entrenamiento (es decir en la zona de predicción por extrapolación). Inclusive, con los print-out, podemos ver que a pesar que la función de costo es prácticamente igual en valor, el valor mínimo de predicción cae por debajo de 0 cuando no se impone la restricción, lo cual es un resultado inválido si estamos modelando una cantidad positiva. Ejemplos de este tipo de consideraciones pueden aparecer cuando queremos estimar una varianza o desvío estándar mediante una red neuronal, o bien un radio, una distancia, etc. 
 
 
-```{contents}
-:local:
-```
+```{bibliography}
+:style: unsrt
+:filter: docname in docnames
