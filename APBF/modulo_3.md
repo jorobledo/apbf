@@ -303,6 +303,26 @@ en donde $d$ denota el número de componentes de $\vec{u}$. En este caso, como $
 
 Ahora utilizaremos el modo reverso de diferenciación automática y nos centraremos en computar un producto vectorial de matrices entre la transpuesta del jacobiano y un vector $\vec{a}$, .i.e. $\left(\frac{\partial \mathcal{P}_i}{\partial \vec{u}}\right)^T \vec{a}$. Si tuviesemos que construir y almacenar toda matriz jacobiana que necesitamos durante el entrenamiento causaría mucho uso de memoria y relentizaría el proceso de entrenamiento innecesariamente. En vez de eso, en la retropropagación, podemos computar productos con el jacobiano más rápidos porque siempre tenemos una función escalar de costo al final de la cadena. 
 
+
+eniendo en cuenta esta formulación, necesitamos resolver la derivada de la función de costo escalar $\mathcal l$, lo cual es equivalente a considerar las derivadas de la cadena de funciones compuestas $\mathcal{P}_i$ evaluadas en un estado actual dado $\vec{u}^n$ mediante la regla de la cadena. A modo de ejemplo, para el caso de dos operadores
+
+
+$$
+    \frac{\partial \mathcal l}{ \partial \mathbf{u}}  = \frac{ \partial (\mathcal P_2 \circ \mathcal P_1) }{ \partial \mathbf{u} } \Big|_{\mathbf{u}^n}
+    = 
+    \frac{ \partial \mathcal P_2 }{ \partial \mathcal P_1 } \big|_{\mathcal P_1(\mathbf{u}^n)}
+    \ 
+    \frac{ \partial \mathcal P_1 }{ \partial \mathbf{u} } \big|_{\mathbf{u}^n} \ ,
+$$
+o cual corresponde a la versión vectorial de la regla de la cadena clásica y se extiende de forma directa al caso de una composición de más de dos operadores $i>2$.
+
+Las derivadas de $\mathcal{P}_1$ y $\mathcal{P}_2$ siguen siendo jacobianos, pero dado que la función de costo $\mathcal l$ es escalar, el gradiente de $\mathcal l$ con respecto al último operador de la cadena es un vector. En el modo reverso de diferenciación, se inicia la propagación con este gradiente y se calculan sucesivamente los productos Jacobiano propagando la información de sensibilidad hacia el estado inicial \vec{u}.
+
+
+De esta manera, una vez que podemos calcular los productos de los Jacobianos de los operadores de nuestro simulador, podemos integrarlos dentro del workflow de aprendizaje profundo. 
+
+
+
 ```{bibliography}
 :style: unsrt
 :filter: docname in docnames
