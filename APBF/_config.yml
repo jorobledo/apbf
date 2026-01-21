@@ -37,7 +37,7 @@ html:
   use_issues_button: true
   use_repository_button: true
   extra_css: ["_static/custom.css"]
-  toc_depth: 3
+  toc_depth: 4
 
 sphinx:
   config:

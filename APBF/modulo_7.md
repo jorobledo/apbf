@@ -22,3 +22,8 @@ kernelspec:
 ## Operadores neuronales profundos (DeepONets)
 
 ## Operadores Fourier Neuronales (FNO)
+
+```{bibliography}
+:style: unsrt
+:filter: docname in docnames
+```

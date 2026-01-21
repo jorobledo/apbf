@@ -34,5 +34,5 @@ Este libro de apuntes no solo pretende ser una guía académica, sino también u
 ## Índice
 
 ```{tableofcontents}
-:depth: 2
+:depth: 4
 ```

@@ -23,3 +23,7 @@ kernelspec:
 
 ## Estimación de densidad neuronal e inferencia amortizada
 
+```{bibliography}
+:style: unsrt
+:filter: docname in docnames
+```

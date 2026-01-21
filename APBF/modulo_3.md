@@ -38,7 +38,7 @@ En el caso más sencillo de PINN, la red neuronal $q(\vec{x},t)$ aproxima la sol
 Las PINNs han demostrado utilidad en una amplia variedad de aplicaciones, incluyendo dinámica de fluídos, transferencia de calor, mecánica de sólidos, electromagnetismo, e incluse en sistemas biológicos. Éstas ofrecen una formulación unificada para problemas directos e inversos, permitiendo tanto la estimación de campos físicos como la identificación de parámetros desconocidos. 
 
 
-## Función de costo física
+### Función de costo física
 
 Dada solución $u$, podemos computar el residuo $R$ como
 
@@ -58,7 +58,7 @@ Notar que no tenemos ninguna garantía que el término residual alcance cero dur
 
 Planteando el problema de esta manera, estamos pensando en una representación neuronal de campo que llamaremos campo neuronal. Es decir, nuestra red neuronal $q$ está siendo optimizada de manera tal de satifacer $R=0$. Por lo tanto $q=q(\vec{x},\theta)$, donde elegimos los parámetros $\theta$ de la red de manera tal que $q\approx u$ lo más posible. A esto se le suele llamar red neuronal basada en la física (PINN, del inglés physics informed nueral network) y el artículo {cite}`raissi2019physics` sirve de excelente guía para entender cómo se utilizan en problemas inversos y hacia adelante.
 
-## Ejemplo: Optimización de la ecuación de Burger con una PINN
+### Ejemplo: Optimización de la ecuación de Burger con una PINN
 
 Consideremos la tarea de reconstrucción como un problema inverso. Vamos a utilizar la ecuación de Burger 
 
@@ -306,3 +306,4 @@ Ahora utilizaremos el modo reverso de diferenciación automática y nos centrare
 ```{bibliography}
 :style: unsrt
 :filter: docname in docnames
+```

@@ -16,7 +16,6 @@ kernelspec:
 :local:
 ```
 
-
 ## Mezcla de densidades Gaussianas (MDN)
 
 ## Autoencoder Variacional (VAE)
@@ -25,4 +24,7 @@ kernelspec:
 
 ## Normalizadores de flujo (NF)
 
-
+```{bibliography}
+:style: unsrt
+:filter: docname in docnames
+```

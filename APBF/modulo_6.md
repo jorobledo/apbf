@@ -24,3 +24,7 @@ kernelspec:
 ## Ensambles profundos
 
 
+```{bibliography}
+:style: unsrt
+:filter: docname in docnames
+```
