@@ -268,11 +268,15 @@ Si el vector de entrada es $\vec{x}$ -->
 
 En esta sección vamos a explorar la posibilidad de incorporar simulaciones numéricas diferenciables al proceso de aprendizaje, lo cuál abreviaremos como física diferenciable (FD). 
 
+El objetivo central de esta metodología es aprovechar los algorítmos numéricos existentes para resolver ecuaciones diferenciales para mejorar los sistemas de inteligencia artificial. Para esto, resulta necesario equipar a los sistemas de IA con la funcionalidad de calcular los gradientes de un simulador físico con respecto a sus entradas, es decir, que puedan calcular cómo cambian las salidas del simulador cuando cambian sus entradas o parámetros, a modo de optimizar o aprender esos parámetros usando gradientes. Una vez que hacemos esto para todos los operadores de una simulación, podemos utilizar la diferenciación automática {cite}`baydin2018automatic` a nuestro favor junto con la retropropagación para permitir que la información del gradiente fluya del simulador a la red neuronal y viceversa. Lo que estamos haciendo es integrar directamente el simulador físico dentro del grafo computacional del modelo de aprendizaje.
 
-El objetivo central de esta metodología es aprovechar los algorítmos numéricos existentes para resolver ecuaciones diferenciales para mejorar los sistemas de inteligencia artificial. Para esto, resulta necesario equipar a los sistemas de IA con la funcionalidad de calcular los gradientes con respecto a sus entradas. Una vez que hacemos esto para todos los opoeradores de una simulación, podemos utilizar la diferenciación automática {cite}`baydin2018automatic` a nuestro favor junto con la retropropagación para permitir que la información del gradiente fluya del simulador a la red neuronal y viceversa. 
+En contraste con las PINNs propuestas anteriormente, esto permite manejar espacios de soluciones más complejos, sin necesidad de aprender para un problema inverso específico como hicimos anteriormente. La física diferenciable permite entrenar redes neuronales que aprender a aproximar soluciones a un conjunto mayor de problemas inversos de manera más eficiente. Se trata de usar décadas de conocimiento en métodos numericos y hacerlos compatibles con aprendizaje por gradiente. Es decir, el solver sigue tiendo el experto físico pero la red neuronal aprende alrededor o encima de él.
 
-En contraste con las PINNs propuestas anteriormente, esto permite manejar espacios de soluciones más complejos, sin necesidad de aprender para un problema inverso específico como hicimos anteriormente. La física diferenciable permite entrenar redes neuronales que aprender a aproximar soluciones a un conjunto mayor de problemas inversos de manera más eficiente. 
+Para clarificar, un simulador físico clásico agarra una entrada y provee de una salida que resulta de la descripción física del simulador. Por ejemplo la entrada puede ser alguna cantidad vectorial inicial y algunos parámetros que escalean cierta ecuación, $(\vec{u}(t=0), \nu)$ y la salida puede ser el vector evolucionado a tiempo $T$, $\vec{u}(t=T)$. Sin embargo, estos solvers no nos dicen cómo cambiar la entrada para mejorar el resultado (donde mejorar el resultado resta por definir y será definido bajo cierto objetivo). En FD, el simulador sabe cómo calcular $\partial \vec u (T) / \partial \vec{u}(t=0)$ y $\partial \vec u (T) / \partial \nu$, lo que permite insertar al simulador dentro del pipeline de aprendizaje, propagar gradientes a través del simulador, y por lo tanto optimizar parámetros, estados iniciales o controles. 
 
+Al poder calcular los gradientes, el simulador se convierte en una "capa más del modelo", con lo que los frameworks de aprendizaje profundo pueden usar retropropagación y permitir que los gradientes fluyan desde la función de costo a través del simulador y hacia una red neuronal o hacia parámetros físicos, permitiendo entrenar sistemas híbridos. La interacción de los sitemas híbridos puede ser de la red hacia el simulador o viceversa. En el primer caso, la red puede generar parámetros físicos, condiciones inciales, fuerzas externas, etc. y el simulador puede usar esto para producir una evolución física. En el segundo caso, la red recibe estados simulados, gradientes físicos e información estructurada del simulador y puede a partir de eso generar una predicción. 
+
+A continuación veremos cómo se vuelven diferenciales los solvers existentes.
 
 ### Operadores diferenciables
 
@@ -316,12 +320,452 @@ $$
 $$
 o cual corresponde a la versión vectorial de la regla de la cadena clásica y se extiende de forma directa al caso de una composición de más de dos operadores $i>2$.
 
-Las derivadas de $\mathcal{P}_1$ y $\mathcal{P}_2$ siguen siendo jacobianos, pero dado que la función de costo $\mathcal l$ es escalar, el gradiente de $\mathcal l$ con respecto al último operador de la cadena es un vector. En el modo reverso de diferenciación, se inicia la propagación con este gradiente y se calculan sucesivamente los productos Jacobiano propagando la información de sensibilidad hacia el estado inicial \vec{u}.
+Las derivadas de $\mathcal{P}_1$ y $\mathcal{P}_2$ siguen siendo jacobianos, pero dado que la función de costo $\mathcal l$ es escalar, el gradiente de $\mathcal l$ con respecto al último operador de la cadena es un vector. En el modo reverso de diferenciación, se inicia la propagación con este gradiente y se calculan sucesivamente los productos Jacobiano propagando la información de sensibilidad hacia el estado inicial $\vec{u}$.
 
 
-De esta manera, una vez que podemos calcular los productos de los Jacobianos de los operadores de nuestro simulador, podemos integrarlos dentro del workflow de aprendizaje profundo. 
+De esta manera, una vez que podemos calcular los productos de los Jacobianos de los operadores de nuestro simulador, podemos integrarlos dentro del pipeline de aprendizaje profundo, al igual que uno incluiría una capa completamente conectada o una función de activación de ReLU. Es decir, resulta totalmente compatible incluir la capa de física diferencial dentro de los modelos de aprendizaje automático. 
+
+Uno podría pensar que, dado que la mayoría de los solvers pueden descomponerse en una secuencia de operaciones vectoriales y matriciales y dado que los frameworks de deep learning como PyTorch ya soportan este tipo de operaciones y diferenciación automática, se podrían implementar directamente los solver físicos usando estas operaciones básicas únicamente. Aunque teóricamente esto es posible, en la práctica resulta inconveniente. La principal inconveniencia es que cada operación elemental (suma, multiplicación, producto, etc.) se evalúa de manera independiente y por lo tanto debe almacenar información intermedia durante la evaluación hacia adelante para poder calcular los gradientes durante el proceso de retropropagación. En una simulación física, normalmente no estamos interesados en cada uno de estos resultados intermedios, sino sólamente cómo se actualiza el estado del sistema, pasando de $\vec{u}(t)$ hasta $\vec{u}(t+\Delta t)$. Por ende, en la práctica resulta mucho más eficiente agrupar el proceso de resolución en una secuencia de operadores grandes y significativos a los que llamaremos operadores *monolíticos*. Cada uno de estos operadores encapsula un paso relevante del método numérico completo en lugar de exponer todas las operaciones elementales que lo componen. Este enfoque tiene varias ventajas. Por un lado, evita el cálculo y almacenamiento innecesario, reduciendo el consumo de memoria y costo computacional. Por otro, permite elegir los métodos numéricos más edcuados para calcular tanto la actualización del estado como sus derivadas. Adempas, permite aprovechar algoritmos numéricamente eficientes (por ejemplo para inversión de matrices, se pueden usar solvers multigrid con complejidad $\mathcal O (n)$). El principal inconveniente de este enfoque es que requiere un mayor entendimiento del problema físico y de los métodos numéricos utilizados. Además, muchos solvers no propocionan de forma directa las derivadas necesarias para el aprendizaje, por lo que deben implementarse explícitamente. 
+
+Como comentario final, en la práctica conviene ser avaro con las derivadas que se implementan. Sólo es necesario proporcionar aquellas que realmente intervienen en el proceso de aprendizaje. Es decir, si por ejemplo una red neuronal nunca genera el parámetro $\nu$ y este no aparece tampoco en la función de costo, entonces durante la retropropagación nunca será necesario calcular derivadas con respecto al parámetro (y esto ahora mucho tiempo).
+
+### Ejemplo: Oscilador armónico forzado
+
+El oscilador armónico amortiguado es uno de los modelos mínimos para describir sistemas dinámicos reales. En su forma más estándar, el sistema se expresa como una ecuación diferencial ordinaria de segundo orden
+
+$$
+m,\ddot{x}(t) + c,\dot{x}(t) + k,x(t) = 0,
+$$
+
+donde $x(t)$ es el desplazamiento, $m>0$ es la masa (asumida conocida en este ejemplo), $c>0$ es el coeficiente de amortiguamiento (pérdidas por fricción viscosa) y $k>0$ es la constante elástica (rigidez del resorte). 
+
+Si $c$ y $k$ fuesen conocidos, el problema directo consiste en predecir la trayectoria $x(t)$ dada una condición inicial $(x(0),\dot{x}(0))$. Sin embargo, en aplicaciones reales ocurre el problema inverso: observamos el movimiento (tipicamente con ruido) y queremos inferir los parámetros que lo explican. A esto se le suele llamar **problema inverso**. 
+
+Cuando medimos, casi nunca disponemos de trayectorias continuas. Observamos muestras discretas $x(t_0), x(t_1), \dots$ y terminamos usando un integrador numérico para aproximar la dinámica. Usaremos un esquema explícito simple tipo Euler {cite}`wiki:Euler_method` (actualizando velocidad y posición con un paso $dt$) para generar trayectorias discretas. En este caso, se calcula la aceleración 
+
+$$
+a = - \frac{c}{m}v - \frac{k}{m}x
+$$
+
+y luego se actualizan las velocidades y la posición de la forma $v \leftarrow v + dt\,a$ y $x \leftarrow x + dt\,v$. A continuación implementamos un simulador en `PyTorch` lo que lo hace diferenciable. Es decir, podemos calcular las derivadas vía diferenciación automática para analizar como cambian las trayectorias con respecto a los parámetros $c$ y $k$. 
+
+```{code-cell} ipython3
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+torch.manual_seed(0)
 
 
+def simulador_oscilador_amortiguado_batch(m, c, k, x0, v0, dt, T):
+    """
+    c, k: tensores (B,)
+    Salida x_traj: (B, T+1)
+    """
+    B = c.shape[0]
+
+    x = x0.expand(B)      # (B,)
+    v = v0.expand(B)      # (B,)
+
+    xs = [x]
+
+    for _ in range(T):
+        a = -(c / m) * v - (k / m) * x   # (B,)
+        v = v + dt * a
+        x = x + dt * v
+        xs.append(x)
+
+    return torch.stack(xs, dim=1)  # (B, T+1)
+
+```
+
+Podemos visualizar el resultado del simulador de la siguiente manera.
+
+```{code-cell} ipython3
+# si entrenar en cpu o gpu
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+# Constantes de simulación
+m_true = torch.tensor(1.0, dtype=torch.float32, device=device) # masa conocida
+x0 = torch.tensor(1.0, dtype=torch.float32, device=device) # condición inicial posición
+v0 = torch.tensor(0.0, dtype=torch.float32, device=device) # condición inicial velocidad
+dt = torch.tensor(0.01, dtype=torch.float32, device=device) # paso de tiempo
+T = 400 # número de pasos de tiempo
+
+
+xs = simulador_oscilador_amortiguado_batch(
+    m=m_true,
+    c=torch.tensor([0.5], dtype=torch.float32, device=device),
+    k=torch.tensor([4.0], dtype=torch.float32, device=device),
+    x0=x0,
+    v0=v0,
+    dt=dt,
+    T=T
+)
+
+plt.figure(figsize=(8,4))
+plt.plot(xs[0].cpu().numpy(), label='x(t)')
+plt.title('Trayectoria del oscilador amortiguado')
+plt.xlabel('Tiempo (pasos)')
+plt.ylabel('Posición x')
+plt.grid()
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+
+Ahora plantearemos una red neuronal que nos permita inferir los parámetros físicos $(c, k)$ que caracterizan al sistema dadas $M$ observaciones iniciales del desplazamiento $\{x(t_0),\dots, x(t_{M-1})\}$. La arquitectura propuesta, `RedCK`, es una red completamente conectada (MLP) que recibe un vector de longitud $M$ y produce dos salidas: una estimación de $c$ y otra de $k$. La red devuelve lo que llamé valores "raw" (o crudos) que luedo pueden transformarse para cumplir con los constraints físicos, como la positividad de ambos valores, como explicado en el capítulo {ref}`contraints_fisicos`.
+
+
+```{code-cell} ipython3
+class RedCK(nn.Module):
+    '''
+    Red neuronal para predecir c y k dados M puntos de la trayectoria.
+    '''
+    def __init__(self, M):
+        super().__init__()
+        self.fc1 = nn.Linear(M, 32)
+        self.fc2 = nn.Linear(32, 32)
+        self.out = nn.Linear(32, 2)
+
+    def forward(self, x_partial):
+        h = F.relu(self.fc1(x_partial))
+        h = F.relu(self.fc2(h))
+        raw = self.out(h)
+        return raw[:, 0], raw[:, 1]
+
+def positive(p):
+    '''
+    Asegura que p > 0 usando softplus.
+    '''
+    return F.softplus(p) + 1e-6
+```
+
+Para entrenar y evaluar el sistema, construiremos un conjunto de datos sintéticos que reproduce datos medidos. Para esto, muestrearemos parámetros $c$ y $k$ de distribuciones uniformes en rangos relativamente razonables. Luego simularemos la trayectoria completa $x(t)$ durante $T$ pasos de tiempo para cada set de parámetros muestreados. Agregaremos además ruido gaussiano para que asimilen más mediciones reales y dividiremos los datos generados en una parte de longitud $M$ que será el input de nuestra red, y el resto que quedará disponible como referencia.
+
+```{code-cell} ipython3
+def sample_batch(batch_size, M, T, dt, m, x0, v0, ruido_std=0.01):
+    '''
+    Genera un batch de datos sintéticos.
+
+    Parámetros:
+    - batch_size: número de muestras en el batch
+    - M: número de observaciones iniciales con ruido
+    - T: número total de pasos de tiempo
+    - dt: paso de tiempo
+    - m: masa del oscilador
+    - x0: condición inicial posición
+    - v0: condición inicial velocidad
+    - ruido_std: desviación estándar del ruido gaussiano añadido
+
+    Devuelve:
+    - x_partial: (B, M) primeras M posiciones con ruido
+    - y_obs: (B, T+1) posiciones completas con ruido
+    - c_true: (B,) coeficientes de amortiguamiento verdaderos
+    - k_true: (B,) constantes elásticas verdaderas
+    '''
+    c_true = torch.empty(batch_size, device=device).uniform_(0.05, 1.0)
+    k_true = torch.empty(batch_size, device=device).uniform_(0.5, 8.0)
+
+    x_traj = simulador_oscilador_amortiguado_batch(
+        m, c_true, k_true, x0, v0, dt, T
+    )
+
+    y_obs = x_traj + ruido_std * torch.randn_like(x_traj)
+    x_partial = y_obs[:, :M]
+
+    return x_partial, y_obs, c_true, k_true
+```
+
+Podemos observar algunos datos para darnos una idea de la estructura de nuestros datos
+
+```{code-cell} ipython3
+def graficar_batch(batch_size=5, M=150, T=400, dt_val=0.01, m=None, x0=None, v0=None, ruido_std=0.01):
+    """
+    Grafica un batch de trayectorias del oscilador amortiguado.
+    
+    Parámetros:
+    - batch_size: número de trayectorias a graficar (default 5)
+    - M: número de observaciones iniciales
+    - T: número total de pasos de tiempo
+    - dt_val: paso de tiempo
+    - m: masa del oscilador
+    - x0: condición inicial posición
+    - v0: condición inicial velocidad
+    - ruido_std: desviación estándar del ruido
+    """
+    
+    # Generar batch
+    x_partial, y_obs, c_true, k_true = sample_batch(
+        batch_size, M, T, dt_val, m, x0, v0, ruido_std=ruido_std
+    )
+    
+    fig, axes = plt.subplots(batch_size, 1, figsize=(12, 3*batch_size))
+    if batch_size == 1:
+        axes = [axes]
+    
+    t = (torch.arange(T + 1) * dt_val).cpu()
+    
+    for i in range(batch_size):
+        ax = axes[i]
+        
+        # Observaciones con ruido (primeras M)
+        ax.plot(t[:M].cpu(), y_obs[i, :M].cpu(), "k.", markersize=3, alpha=0.6, label="Obs. (primeras M)")
+        
+        # Trayectoria completa observada
+        ax.plot(t.cpu(), y_obs[i].cpu(), "b-", linewidth=1.5, alpha=0.7, label="Trayectoria obs.")
+        
+        # Trayectoria con parámetros verdaderos
+        ax.plot(t[:M].cpu(), x_partial[i].cpu(), "r--", linewidth=2, label="Trayectoria parcial")
+        
+        # Línea vertical en M
+        ax.axvline(t[M].item(), color="gray", linestyle=":", alpha=0.5)
+        
+        # Etiqueta con parámetros
+        c_val = c_true[i].item()
+        k_val = k_true[i].item()
+        ax.set_title(f"Muestra {i+1} | c_true={c_val:.4f}, k_true={k_val:.4f}", fontsize=10)
+        ax.set_ylabel("Posición x(t)")
+        ax.grid(True, alpha=0.3)
+        if i == 0:
+            ax.legend(loc="upper right", fontsize=9)
+    
+    axes[-1].set_xlabel("Tiempo")
+    plt.tight_layout()
+    plt.show()
+
+
+
+# --------
+# Entrenamiento
+# --------
+M = 150 # número de observaciones iniciales usadas como input de la red
+
+graficar_batch(batch_size=5, M=M, T=T, dt_val=dt.item(), m=m_true, x0=x0, v0=v0)
+```
+
+
+Podemos definir la red, un optimizador para el proceso de optimización y la cantidad de iteraciones, así como el tamaño del batch. Esto dependerá fuertemente de los recursos computacionales con los que contemos. 
+
+
+```{code-cell} ipython3
+net = RedCK(M) # inicializar red
+net.to(device) # mover a dispositivo
+
+optimizer = torch.optim.Adam(net.parameters(), lr=1e-3) # optimizador
+
+steps = 1000 # número de iteraciones de entrenamiento
+batch_size = 64 # tamaño de batch
+```
+
+Vamos a armar el loop de entrenamiento, en donde plantearemos una función de costo que presenta dos términos. El primer término tendrá en cuenta el error en la trayectoria, es decir la consistencia con la dinámica de las ecuaciones. Este término lo llamaremos $\mathcal L_{traj}$ y estará dado por
+
+$$
+\mathcal L_{traj} = \frac{1}{n_{b}n_{T}}\sum_{b,t}(\hat{x}_{b,t}-x^{obs}_{b, t})^2,
+$$
+
+en donde el subíndice $b=1,\dots,n_b$ refiere a las trayectorias del batch y $t=1,\dots,n_{T}$ a los instantes temporales.
+
+El segundo término será el error en los parámetros, es decir el aprendizaje supervisado directo. Este término lo denotaremos $\mathcal L_{param}$ y estará dado por la suma de los errores cuadrático medio de los parámetros $c$ y $k$. Plantearemos un factor que controla el compromiso entre ambas funciones de costo para la función de costo total
+
+$$
+\mathcal L_{tot} = \mathcal{L}_{traj} + 0.5 \mathcal L_{param}.
+$$
+
+En cada iteración, la red neuronal infiere parámetros físicos a partir de las observaciones parciales y luego se evalúa el simulador diferenciable con los parámetros. El aprendizaje se producirá al minimizar la discrepancia entre la dinámica observada y la dinámica reconstruída. 
+
+
+```{code-cell} ipython3
+for it in range(steps):
+    optimizer.zero_grad()
+
+    x_partial, y_obs, c_true, k_true = sample_batch(
+        batch_size, M, T, dt, m_true, x0, v0
+    ) # generar batch sintético
+
+    # mover a dispositivo
+    x_partial = x_partial.to(device)
+    y_obs = y_obs.to(device)
+
+    raw_c, raw_k = net(x_partial) # predecir parámetros
+    # asegurar positividad
+    c_hat = positive(raw_c) 
+    k_hat = positive(raw_k)
+
+    x_hat = simulador_oscilador_amortiguado_batch(
+        m_true, c_hat, k_hat, x0, v0, dt, T
+    ) # simular con parámetros predichos
+
+    loss_traj = torch.mean((x_hat - y_obs) ** 2) # costo MSE de trayectoria
+    loss_param = torch.mean((c_hat - c_true) ** 2 + (k_hat - k_true) ** 2) # costo MSE de parámetros
+
+    loss = loss_traj + 0.5 * loss_param # costo total
+
+    loss.backward()
+    optimizer.step()
+
+    if (it + 1) % 200 == 0:
+        print(
+            f"iter {it+1:4d} | "
+            f"traj={loss_traj.item():.3e} | "
+            f"param={loss_param.item():.3e}"
+        )
+```
+
+Para evaluar podemos graficar un caso, junto también a un ajuste mediante retropropagación del gradiente como visto en la sección anterior. 
+
+```{code-cell} ipython3
+
+def ajuste_ck(y_obs, M, T, dt, m, x0, v0, iters=100, lr=5e-2):
+    """
+    Ajuste por optimización por muestra de c y k dados los datos observados y las condiciones iniciales.
+
+    Parámetros:
+    - y_obs: (T+1,) datos observados con ruido
+    - M: número de observaciones iniciales usadas como input de la red
+    - T: número de pasos de tiempo
+    - dt: paso de tiempo
+    - m: masa del oscilador
+    - x0: condición inicial posición
+    - v0: condición inicial velocidad
+    - iters: número de iteraciones de optimización
+    - lr: tasa de aprendizaje del optimizador
+
+    Devuelve:
+    - c_est: coeficiente de amortiguamiento estimado
+    - k_est: constante elástica estimada
+    - mse_future: error cuadrático medio en la predicción futura (después de M)
+    """
+
+    raw_c = torch.nn.Parameter(torch.tensor(0.0, device=device))
+    raw_k = torch.nn.Parameter(torch.tensor(0.0, device=device))
+    opt = torch.optim.Adam([raw_c, raw_k], lr=lr)
+
+    for _ in range(iters):
+        opt.zero_grad()
+        c = positive(raw_c)
+        k = positive(raw_k)
+        x_hat = simulador_oscilador_amortiguado_batch(m, c.unsqueeze(0), k.unsqueeze(0), x0, v0, dt, T)[0]
+        loss = torch.mean((x_hat - y_obs) ** 2)
+        loss.backward()
+        opt.step()
+
+    with torch.no_grad():
+        c_est = positive(raw_c).item()
+        k_est = positive(raw_k).item()
+        x_hat = simulador_oscilador_amortiguado_batch(m, torch.tensor([c_est], device=device), torch.tensor([k_est], device=device), x0, v0, dt, T)[0]
+        mse_future = torch.mean((x_hat[M:] - y_obs[M:]) ** 2).item()
+
+    return c_est, k_est, mse_future
+
+
+def graficar_un_caso(
+    net, M, T, dt, m, x0, v0,
+    ruido_std=0.01,
+    comparar_ajuste=True,
+    t_extrap_max=5.0
+):
+    net.eval()
+
+    T_ext = int(t_extrap_max / dt) #definir numer de pasos extrapolados
+
+    # --------
+    # Generar un caso nuevo 
+    # --------
+    with torch.no_grad():
+        x_partial, y_obs, c_true, k_true = sample_batch(
+            batch_size=1, M=M, T=T, dt=dt, m=m, x0=x0, v0=v0, ruido_std=ruido_std
+        )
+
+        y = y_obs[0]          # (T+1,)
+        c_true = c_true.item()
+        k_true = k_true.item()
+
+        # --------
+        # Inferencia con la red
+        # --------
+        raw_c, raw_k = net(x_partial)
+        c_hat = positive(raw_c)[0].item()
+        k_hat = positive(raw_k)[0].item()
+
+        x_hat_nn = simulador_oscilador_amortiguado_batch(
+            m,
+            torch.tensor([c_hat], device=device),
+            torch.tensor([k_hat], device=device),
+            x0, v0, dt, T_ext
+        )[0]
+
+    # --------
+    # (Opcional) ajuste por optimización por muestra
+    # --------
+    if comparar_ajuste:
+        c_fit, k_fit, _ = ajuste_ck(
+            y, M, T, dt, m, x0, v0, iters=100
+        )
+
+        x_hat_fit = simulador_oscilador_amortiguado_batch(
+            m,
+            torch.tensor([c_fit], device=device),
+            torch.tensor([k_fit], device=device),
+            x0, v0, dt, T_ext
+        )[0]
+
+    # --------
+    # Gráfico
+    # --------
+    with torch.no_grad():
+        t_obs = torch.arange(T + 1) * dt.cpu()
+        t_ext = torch.arange(T_ext + 1) * dt.cpu()
+
+
+    plt.figure(figsize=(10, 5))
+
+    plt.plot(t_obs, y.cpu(), "k.", markersize=2, alpha=0.4, label="Observaciones")
+    plt.plot(t_ext, x_hat_nn.cpu(), "r", linewidth=2, label="Predicción (NN + DP)")
+
+    if comparar_ajuste:
+        plt.plot(t_ext, x_hat_fit.cpu(), "b--", linewidth=2, label="Predicción (ajuste por muestra)")
+
+    plt.axvline(t_obs[M], color="gray", linestyle=":", label="Fin observación")
+    plt.axvline(t_obs[-1], color="k", linestyle="--", label="Fin dominio entrenamiento")
+    plt.axvspan(
+        t_obs[-1],
+        t_ext[-1],
+        color="orange",
+        alpha=0.15,
+        label="Región de extrapolación"
+    )
+
+    plt.title(
+        "Inferencia de parámetros con Física Diferenciable + Red Neuronal\n"
+        f"True: c={c_true:.3f}, k={k_true:.3f} | "
+        f"NN: c={c_hat:.3f}, k={k_hat:.3f}"
+        + (f" | Fit: c={c_fit:.3f}, k={k_fit:.3f}" if comparar_ajuste else "")
+    )
+
+    plt.xlabel("Tiempo")
+    plt.ylabel("Posición x(t)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+graficar_un_caso(
+    net,
+    M=M,
+    T=T,
+    dt=dt,
+    m=m_true,
+    x0=x0,
+    v0=v0,
+    ruido_std=0.01,
+    comparar_ajuste=True,
+    t_extrap_max=5.0
+)
+```
+
+En el título del gráfico, vemos los parámetros verdaderos, como los obtenidos por la red neuronal y aquellos obtenidos por el ajuste de los datos por retropropagación, utilizando la diferenciabilidad de nuestro simulador. Incrementando la cantidad de iteraciones se puede lograr una aproximación excelente y vemos que la solución que produce la red neuronal es consistente con las ecuaciones diferenciales propuestas por el simulador. A su vez, vemos como en la región de extrapolación la solución encontrada y propuesta por
 
 ```{bibliography}
 :style: unsrt

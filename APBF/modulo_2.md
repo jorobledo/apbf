@@ -565,6 +565,7 @@ plt.legend()
 plt.show()
 ```
 
+(contraints_fisicos)=
 ## Sesgos inductivos y constraints físicos
 
 Todo modelo de aprendizaje automático incorpora, de manera explícita o implícita, un conjunto de supuestos sobre el tipo de funciones que es capaz de aprender. Estos supuestos, conocidos como sesgos inductivos, determinan cómo el modelo generaliza más allá de los datos observados y juegan un papel central cuando la información disponible es limitada, ruidosa o incompleta.
