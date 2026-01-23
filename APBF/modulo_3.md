@@ -767,6 +767,11 @@ graficar_un_caso(
 
 En el título del gráfico, vemos los parámetros verdaderos, como los obtenidos por la red neuronal y aquellos obtenidos por el ajuste de los datos por retropropagación, utilizando la diferenciabilidad de nuestro simulador. Incrementando la cantidad de iteraciones se puede lograr una aproximación excelente y vemos que la solución que produce la red neuronal es consistente con las ecuaciones diferenciales propuestas por el simulador. A su vez, vemos como en la región de extrapolación la solución encontrada y propuesta por
 
+
+## Discusión final
+
+Agregar discusión.
+
 ```{bibliography}
 :style: unsrt
 :filter: docname in docnames
