@@ -31,7 +31,88 @@ Desde una perspectiva moderna, muchos de estos modelos se implementan mediante r
 
 ## Diseñar una función de costo adecuada
 
+El límite inferior de la evidencia (ELBO, del inglés *evidence lower bound*) es una cantidad importante que permite el entrenamiento de modelos probabilísticos y que veremos en detalle a continuación. 
 
+En un modelo de variable latente, suponemos que nuestros dato observado $x$ es una realización de una variable aleatoria $X$. Más aún, pensamos que existe otra variable aleatoria $Z$ cuya probabilidad de distribución conjunta está determinada por $p(X,Z;\theta)$, en donde $\theta$ son los parámetros que parametrizan la distribución. Desafortunadamente, nuestros datos medidos u observados son sólo una realización de $X$ y no de $Z$, por lo que $Z$ permanece no observada o latente. 
+
+Supongamos que queremos calcular la distribución de probabilidad posterior $p(Z|X;\theta)$ dado algún valor fijo de $\theta$. Es decir, cuál es la probabilidad de observar $Z=z$ dado que se observó $X=x$ para todo valor de $z$ y $x$. Este problema se puede plantear utilizando lo que se conoce como *inferencia variacional* y que describiremos en breves. 
+
+Ahora supongamos que no conocemos $\theta$, pero queremos encontrar el estimador de máxima verosimilitud de $\theta$, i.e. $\text{argmax}_{\theta} l(\theta)$, en donde $l(\theta)$ es la función de log-verosimilitud, definida como
+
+$$
+l(\theta) := \log (p(x;\theta)) = \log \int_z p(x,z;\theta)dz.
+$$
+Este problema se puede plantear utilizando la *maximicación del valor esperado* o esperanza. 
+
+Tanto la inferencia variacional como la maximización del valor esperado se basan en el límite inferior de la evidencia ELBO. 
+
+Para entender ELBO hay que primero definir qué es la evidencia. La *evidencia* es el nombre que se le da a la función de verosimilitud evaluada en un vector de parámetros $\theta$ fijo. Esto se denota poniendo a $\theta$ del lado derecho del símbolo $;$ en la expresión
+
+$$
+\text{evidencia}:= \log p(x;\theta).
+$$
+
+Intuitivamente, si elegimos el modelo correcto para $p$ y $\theta$, esperaríamos que la probabilidad marginal de observar los datos $x$ que observamos sea muy alta. Por lo tanto, un valor alto para $\log p(x;\theta)$ indica de cierta manera que estamos en la dirección correcta al haber seleccionado el modelo $p$ y los parámetros $\theta$ para estos datos. Es decir, que esta cantidad es una "evidencia" que hemos elegido el modelo correcto para los datos.
+
+Ahora supongamos que $Z$ sigue una distribución denotada por $q$. Utilizando el teorema de Bayes {cite}`wiki:Bayes` podemos escribir a la probabilidad conjunta $p(x,z;\theta)=p(x|z;\theta)q(z)$. El límite inferior para la evidencia no es más que
+
+$$
+\begin{align}
+\log p(x;\theta)
+&= \log \int p(x,z;\theta)\,dz \\
+&= \log \int q(z)\,\frac{p(x,z;\theta)}{q(z)}\,dz \\
+&= \log \mathbb{E}_{Z\sim q}
+\left[
+\frac{p(x,Z;\theta)}{q(Z)}
+\right] \\
+&\ge \mathbb{E}_{Z\sim q}
+\left[
+\frac{p(x,Z;\theta)}{q(Z)}
+\right] =\mathbb{E}_{Z\sim q}
+\left[
+\log p(x,Z;\theta) - \log q(Z)
+\right],
+\end{align}
+$$
+en donde para pasar a la desigualdad hemos utilizado la desigualdad de Jensen {cite}`wiki:jensen`. Definimos entonces 
+
+$$
+ELBO := \left[
+\frac{p(x,Z;\theta)}{q(Z)}
+\right].
+$$
+
+Resulta que la diferencia entre la evidencia y el ELBO es exactamente la divergencia de Kullback-Leibler (KL) entre $p(z|x;\theta)$ y $q(z)$! Esto se puede probar partiendo desde la definición de la divergencia de Kullback-Leibler:
+
+$$
+\begin{align}
+KL(q(z)||p(z|x;\theta)) :&= \mathbb E_{Z \sim q}\left[\log \frac{q(Z)}{p(Z|x;\theta)}\right] \\
+& = \mathbb E_{Z \sim q}\left[\log q(Z)\right] - \mathbb E_{Z \sim q}\left[\log p(Z|x;\theta)\right] \\
+& = \mathbb E_{Z \sim q}\left[\log q(Z)\right] - \mathbb E_{Z \sim q}\left[\log \frac{p(x,Z;\theta)}{p(x;\theta)}\right] \\
+& = \mathbb E_{Z \sim q}\left[\log q(Z)\right] - \mathbb E_{Z \sim q}\left[\log p(x,Z;\theta)\right] + \mathbb E_{Z \sim q}\left[\log p(x;\theta)\right] \\
+& = \log p(x;\theta) - \mathbb E_{Z \sim q}\left[\frac{\log p(x,Z;\theta)}{\log q(Z)}\right] \\
+& = \text{evidencia} - ELBO.
+\end{align}
+$$
+
+Esta resulta una identidad clave, ya que ahora podemos decir con exactitud que la evidencia es la suma del ELBO + la KL. Cuando el objetivo es maximizar la evidencia, resulta factible entonces maximizar el ELBO y de esta manera la KL va a medir cuán lejos está la aproximación $q(z)$ de la verdadera probabilidad posterior. Además vemos que Maximizar el ELBO equivale a minimizar la KL.
+
+### Inferencia Variacional
+
+La inferencia variacional sirve para estimar una distribución posterior cuando calcularla explícitamente resulta inviable. Como habíamos mencionado, queremos calcular $P(Z|X)$, para $Z$ variable latente y $X$ variable observada. Idealmente, si conociesemos todo,
+
+$$
+p(z|x)=\frac{p(x|z)p(z)}{p(x)},
+$$
+
+pero el problema usual es que el denominador $o(x)$ no tiene una forma cerrada. La inferencia variacional intenta encontrar otra distribución $q(z)$ que se asemeja "lo más posible" a $p(z|x)$. Para esto, utiliza a la divergencia de Kullback-Leibler como una medida de "cercanía" entre dos distribuciones. Por lo tanto en la inferencia variacional se intenta encontrar 
+
+$$
+\hat q := \text{argmin}_q KL(q(z)||p(z|x))
+$$
+y luego devuelve $\hat q (z)$ como la aproximación a la distribución posterior $p(z|x)$. Por ende, en la inferencia variacional se minimiza la KL, lo que acabamos de ver que es equivalente a maximizar el ELBO.
+
+Conceptualmente, la inferencia variacional nos permite formular el problema de inferencia Bayesiana aproximada como un problema de optimización, y para esto, sabemos muy bien como utilizar PyTorch!
 
 ## Mezcla de densidades Gaussianas (MDN)
 
@@ -330,7 +411,19 @@ plt.show()
 Vemos que a pesar de una subestimación de la sensación térmica por encima de 30$^\circ$C y por debajo de -20$^\circ$C, las predicciones concuerdan muy bien con los valores medidos y que la distribución de valores muestrada sigue la forma de la distribución medida.
 ## Autoencoder Variacional (VAE)
 
-En su forma más simple un Autoencoder Variacional (VAE, del inglés *Variational Autoencoder*)
+En su forma más simple un Autoencoder Variacional (VAE, del inglés *Variational Autoencoder*) es un modelo probabilístico que encuentra una representación latente de baja dimensionalidad de los datos {cite}`vaeBernstein`. Son utilizados para reducción de dimensionalidad como así también como modelos generativos. Un VAE es un tipo de **Autoencoder**, es decir un modelo que toma un vector de entrada $\vec{x}$, lo comprime a un espacio de menor dimensionalidad $\vec{z}$ y luego lo descomprime de nuevo en el intento de devolver nuevamente el vector $\vec{x}$, como se muestra en la figura a continuación:
+
+![](https://raw.githubusercontent.com/mbernste/mbernste.github.io/master/images/autoencoder.png)
+
+En este esquema se muestrá al vector de entrada $\vec{x}$ que se alimenta a una función, usualmente una red neuronal, $h_{\phi}(\vec{x})$ para generar un vector de salida de menor dimensionalidad $\vec z$ y luego otra función, también red neuronal, $f_\theta$ que toma al vector $\vec{z}$ y lo descomprime hacia una aproximación $\vec{x'}$ de $\vec{x}$. Las variables $\phi$ y $\theta$ denotan los parámetros de las redes neuronales.
+
+En el caso de los VAE, estos son como autoencoders, pero en este caso son modelos probabilísticos en donde aprenden distribuciones.  Describen la probabilidad conjunta $p(\vec{x},\vec{z})$ para las muestras $\vec{x}$ y sus variables latentes asociadas $\vec{z}$.
+
+El proceso generativo de los VAEs comienza con muestrear la variable latente $\vec{z} \in \mathbb R ^J$ de una distribución sencilla, como una distribución estándar normal. Acá $J$ es la dimensión del espacio latente que es menor a la dimensión del espacio vectorial inicial $D$. Es decir,
+
+$$
+\vec{z} \sim N(\mathbf 0, \mathbf{I})
+$$
 
 
 ## Red generativa adversa (GAN)
