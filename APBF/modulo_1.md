@@ -156,9 +156,9 @@ Durante el proceso de entrenamiento, el modelo de regresión lineal utiliza esto
 
 En resumen, este ejemplo ilustra el aprendizaje supervisado porque el modelo se entrena con datos etiquetados y aprende a predecir la salida, que es la temperatura máxima, a partir de las entradas, que son las características climáticas, basándose en ejemplos previos. Este enfoque permite al modelo generalizar a nuevos datos y realizar predicciones precisas en situaciones similares a las observadas durante el entrenamiento.
 
-### Ejemplo de Aprendizaje No Supervisado: Agrupamiento de Estados Cuánticos
+### Ejemplo de Aprendizaje No Supervisado: Agrupamiento de Estados
 
-En el ámbito de la física cuántica, uno de los desafíos es clasificar estados cuánticos basados en sus propiedades intrínsecas. Supongamos que tenemos un conjunto de datos que representa diferentes estados cuánticos, caracterizados por ciertas medidas experimentales como la energía, el momento angular y el espín. Sin etiquetas que indiquen a qué categoría pertenece cada estado, el objetivo es identificar patrones o grupos dentro de estos datos que puedan sugerir diferentes tipos de estados cuánticos.
+Uno de los desafíos común es es clasificar distintos estados basados en sus propiedades intrínsecas. Supongamos que tenemos un conjunto de datos que representa diferentes estados cuánticos, caracterizados por ciertas medidas experimentales como la energía, el momento angular y el espín. Sin etiquetas que indiquen a qué categoría pertenece cada estado, el objetivo es identificar patrones o grupos dentro de estos datos que puedan sugerir diferentes tipos de estados.
 
 Para abordar este problema, utilizaremos el algoritmo de agrupamiento k-means, una técnica de aprendizaje no supervisado que busca dividir un conjunto de datos en k grupos distintos, donde cada grupo contiene datos similares entre sí.
 

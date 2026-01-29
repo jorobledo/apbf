@@ -219,6 +219,258 @@ $$
 \mathcal L_{Tot} = \mathcal L_{MSE} + \mathcal L_{KL}.
 $$
 
+## Ejemplo: VAE para generar nuevos números del conjunto MNIST
+
+MNIST es un conjunto de datos que consiste en imágenes de números escritos a mano. Las imágenes constan  de $28\times28$ pixeles. Vamos a plantear una espacio latente de $M=50$ ($\vec{z}\in \mathbb R^{50}$) y vamos a utilizar una arquitectura de encoder decoder basada en MLP, pero tranquilamente se podría utilizar una basada en CNN ya que contamos con imágenes. Como vamos a usar un MLP, debemos transformar las imágenes (además de normalizarlas) para que sean un vector. A este procedimiento se le suele llamar `flatten`, resultando en vectores de dimensión $28\times 28=784$.
+
+```{code-cell}ipython3
+import torch
+import torchvision
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+import numpy as np
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,)),
+    transforms.Lambda(lambda x: x.view(-1))  # Flatten the image to [784]
+])
+
+# 2. Load the training dataset
+trainset = torchvision.datasets.MNIST(
+    root='../data',      # A donde se guardan los datos
+    train=True,         # Si queremos la partición de entrenamiento o evaluación
+    download=True,      # descarga de datos si no ya presente
+    transform=transform # transformaciones a los datos
+)
+
+testset = torchvision.datasets.MNIST(
+    root='../data',
+    train=False,
+    download=True,
+    transform=transform
+)
+
+batch_size=128 
+trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
+testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
+
+# Veeamos 25 casos dle conjunto de entrenamiento
+dataiter = iter(trainloader)
+image = next(dataiter)
+
+num_samples = 25
+sample_images = image[0][:num_samples]  # Obtiene las primeras 25 imágenes aplanadas [num_samples, 784]
+
+fig, axes = plt.subplots(5, 5, figsize=(8, 8))
+
+for ax, im in zip(axes.flat, sample_images):
+    ax.imshow(im.reshape(28, 28), cmap='gray')
+    ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+Ahora definimos la arquitectura del VAE como también la función de costo 
+
+```{code-cell}ipython3
+import torch.nn as nn
+import torch.nn.functional as F
+
+class VAE(nn.Module):
+    def __init__(
+          self, 
+          x_dim,
+          hidden_dim,
+          z_dim=10
+        ):
+        super(VAE, self).__init__()
+
+        # Define capas de encoder
+        self.enc_layer1 = nn.Linear(x_dim, hidden_dim)
+        self.enc_layer2_mu = nn.Linear(hidden_dim, z_dim)
+        self.enc_layer2_logvar = nn.Linear(hidden_dim, z_dim)
+
+        # Define capas de decoder
+        self.dec_layer1 = nn.Linear(z_dim, hidden_dim)
+        self.dec_layer2 = nn.Linear(hidden_dim, x_dim) 
+
+    def encoder(self, x):
+        x = F.relu(self.enc_layer1(x))
+        mu = self.enc_layer2_mu(x)
+        logVar = self.enc_layer2_logvar(x)
+        return mu, logVar
+
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(logvar/2)
+        eps = torch.randn_like(std)
+        z = mu + std * eps
+        return z
+
+    def decoder(self, z):
+        output = F.relu(self.dec_layer1(z))
+        output = torch.tanh(self.dec_layer2(output))
+        return output
+
+    def forward(self, x):
+        mu, logvar = self.encoder(x)
+        z = self.reparameterize(mu, logvar)
+        output = self.decoder(z)
+        return output, z, mu, logvar
+
+# Define la función de costo
+def loss_function(output, x, mu, logvar):
+    batch_size = x.size(0)
+    recon_loss = F.mse_loss(output, x, reduction='sum') / batch_size
+    kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()) / batch_size
+    total_loss = recon_loss + 1.5 * kl_loss
+    return total_loss, recon_loss, 1.5 * kl_loss
+```
+
+```{code-cell}ipython3
+learning_rate=1e-3 
+batch_size=128 
+num_epochs=15
+hidden_dim=256
+latent_dim=20
+
+# Seleccionamos dispositivo en donde entrenar
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'Using device: {device}')
+
+x_dim = trainset[0][0].shape[0]  # 784 for MNIST
+
+# Definimos el modelo
+model = VAE(x_dim=x_dim, hidden_dim=hidden_dim, z_dim=latent_dim)
+model.to(device)
+
+# Definimos el optimizador
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+```
+
+
+```{code-cell}ipython3
+# Entrena el modelo
+for epoch in range(num_epochs):
+    epoch_recon_loss = 0
+    epoch_kl_loss = 0
+    for batch in trainloader:
+        # Pone los gradientes a cero
+        optimizer.zero_grad()
+        # Obtiene el batch de datos y lo mueve al dispositivo
+        x = batch[0].view(batch[0].size(0), -1)  # Aplana si es necesario
+        x = x.to(device)
+        # Paso hacia adelante
+        output, z, mu, logvar = model(x)
+        # Calcula la pérdida
+        total_loss, recon_loss, kl_loss = loss_function(output, x, mu, logvar)
+        # Paso hacia atrás
+        total_loss.backward()
+        # Actualiza los parámetros
+        optimizer.step()
+
+        # Añade las pérdidas del batch a las pérdidas de la época
+        epoch_recon_loss += recon_loss.item()
+        epoch_kl_loss += kl_loss.item()
+
+    # Imprime las pérdidas de la época
+    avg_recon = epoch_recon_loss / len(trainloader)
+    avg_kl = epoch_kl_loss / len(trainloader)
+    print(f"Epoch {epoch+1}/{num_epochs}, Recon Loss: {avg_recon:.4f}, KL Loss: {avg_kl:.4f}, Total: {avg_recon + avg_kl:.4f}")
+```
+
+```{code-cell}ipython3
+# Loop de evaluación: evalúa el modelo en el conjunto de prueba
+print("\n--- Prueba en Conjunto de Prueba ---")
+model.eval()
+test_recon_loss = 0
+test_kl_loss = 0
+with torch.no_grad():
+    for batch in testloader:
+        x = batch[0].view(batch[0].size(0), -1)
+        x = x.to(device)
+        output, z, mu, logvar = model(x)
+        total_loss, recon_loss, kl_loss = loss_function(output, x, mu, logvar)
+        test_recon_loss += recon_loss.item()
+        test_kl_loss += kl_loss.item()
+
+test_recon_avg = test_recon_loss / len(testloader)
+test_kl_avg = test_kl_loss / len(testloader)
+print(f"Test Recon Loss: {test_recon_avg:.4f}, Test KL Loss: {test_kl_avg:.4f}, Total: {test_recon_avg + test_kl_avg:.4f}")
+
+
+# Genera nuevas imágenes muestreando del espacio latente
+print("\n--- Generando Nuevas Imágenes ---")
+model.eval()
+with torch.no_grad():
+    # Muestrea de la distribución normal estándar en el espacio latente
+    z_samples = torch.randn(16, latent_dim)
+    z_samples = z_samples.to(device)
+    generated_images = model.decoder(z_samples)
+    
+    # Reformatea a [batch_size, 1, 28, 28] para visualización
+    generated_images = generated_images.view(-1, 1, 28, 28)
+
+# Visualiza las imágenes generadas
+fig, axes = plt.subplots(4, 4, figsize=(8, 8))
+fig.suptitle("Generated Images from VAE", fontsize=14)
+
+for idx, ax in enumerate(axes.flat):
+    # Desnormaliza: las imágenes están normalizadas con media=0.5, std=0.5
+    # desnormalizado = (normalizado * std) + media = (normalizado * 0.5) + 0.5
+    img = generated_images[idx].squeeze().cpu().numpy()
+    img = (img * 0.5) + 0.5  # Desnormaliza
+    img = np.clip(img, 0, 1)  # Recorta a [0, 1]
+    ax.imshow(img, cmap='gray')
+    ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+
+
+```{code-cell}ipython3
+# Reconstruye muestras de prueba para comparar original vs reconstruido
+print("\n--- Reconstruyendo Muestras de Prueba ---")
+model.eval()
+with torch.no_grad():
+    # Obtiene un lote del conjunto de prueba
+    test_batch = next(iter(testloader))
+    x_test = test_batch[0].view(test_batch[0].size(0), -1)[:16]  # Toma las primeras 16 muestras
+    x_test = x_test.to(device)
+    
+    # Reconstruye
+    reconstructed, _, _, _ = model(x_test)
+    
+    # Reformatea a [batch_size, 1, 28, 28] para visualización
+    x_test_img = x_test.view(-1, 1, 28, 28)
+    reconstructed_img = reconstructed.view(-1, 1, 28, 28)
+
+# Visualiza original vs reconstruido
+fig, axes = plt.subplots(4, 8, figsize=(14, 7))
+fig.suptitle("Original vs Reconstructed Images", fontsize=14)
+
+for idx in range(16):
+    # Original
+    img_orig = x_test_img[idx].squeeze().cpu().numpy()
+    img_orig = (img_orig * 0.5) + 0.5
+    img_orig = np.clip(img_orig, 0, 1)
+    axes[idx // 4, 2 * (idx % 4)].imshow(img_orig, cmap='gray')
+    axes[idx // 4, 2 * (idx % 4)].set_title("Original", fontsize=9)
+    axes[idx // 4, 2 * (idx % 4)].axis('off')
+    
+    # Reconstruido
+    img_recon = reconstructed_img[idx].squeeze().cpu().numpy()
+    img_recon = (img_recon * 0.5) + 0.5
+    img_recon = np.clip(img_recon, 0, 1)
+    axes[idx // 4, 2 * (idx % 4) + 1].imshow(img_recon, cmap='gray')
+    axes[idx // 4, 2 * (idx % 4) + 1].set_title("Reconstruido", fontsize=9)
+    axes[idx // 4, 2 * (idx % 4) + 1].axis('off')
+
+plt.tight_layout()
+plt.show()
+```
 ## Red generativa adversa (GAN)
 
 ## Mezcla de densidades Gaussianas (MDN)
