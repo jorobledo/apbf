@@ -473,6 +473,27 @@ plt.show()
 ```
 ## Red generativa adversa (GAN)
 
+La Red Generativa Adversa (GAN, del inglés *Generative Adversarial Network*) fue introducida por primera vez en 2014 por Ian J. Goodfellow {cite}`goodfellow2014generativeadversarialnetworks`. Estas redes están compuestas por dos partes o sub-redes: un generador y un discriminador. El generador usualmente muestrea ruido de una distribución normal o gaussiana y luego prodce un dato falso a partir del ruido que debiera asemejarse a los datos verdaderos. El generador genera o crea casos falsos a partir de ruido gaussiano. Por otro lado, el discriminador trata de adivinar si el caso falso generador por el generador proviene de la base de datos o si es falso (proveniente del generador). Actúa como un juez frente a un caso que viene del generador, sin saber que si ese caso vino del generador o de la base de datos. Si el generador engaña al discriminador, es decir si el discriminador es incapaz de distinguir el caso generado por el generador de uno proveniente de los datos observados, entonces el generador está creando buenas muestras a partir de ruido gaussiano! Por lo tanto podemos entrenar ambas redes de manera tal que compitan entre ellas: que el generador intente engañar al discriminador y que el discriminador intente discriminar casos falsos de los verdaderos. A este tipo de entrenamiento se le suele llamar *entrenamiento adversarial*. El entrenamiento se cortará cuando el discriminador ya no pueda predecir si un caso generador por el generador proviene o no de la base de datos. El esquema de la arquitectura se presenta en la siguiente figura {cite}`ganMedium`:
+
+<img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*4ljFKOfJnGLVG76APk2-hA.png">
+
+Aquí podemos observar el espacio latente de baja dimensión en donde se genera ruido gaussiano. Este ruido se alimenta a la red generadora $G$ y ésta crea una caso falso. Como las redes generativas se usan mucho para generar imágenes, este ejemplo muestra a un caso de nuestros datos como una imágen, pero se puede generar cualquier tipo de dato. También se muestra por lo tanto el conjunto de datos como el espacio de alta dimensionalidad de donde provienen los casos verdaderos. Luego ambos son alimentados a la red discriminadora $D$, que toma la decisión si puede determinar que ambas imágenes vienen de distinta distribución (imágenes verdaderas o imágenes falsas).
+
+Podemos pensar a una GAN como una competencia minimax, en donde el generador trata de minimizar sus chances de ser atrapado generando casos falsos mientras que el discriminador trata de maximizar sus chances de encontrar un caso falso. Esto se puede escribir matemáticamente
+
+$$
+\min_G \max_D \mathcal L(D,G) = \min_G \max_D \mathbb E_{x\sim p_{data}(x)}[\log D(x)] + \mathbb E_{z\sim p_z(z)}[\log(1-D(G(z)))]
+$$
+
+La función de costo acá se asemeja bastante a la función de costo llamada entropía cruzada binaria (BCE, del inglés *Binary Cross Entropy*), dada por
+
+$$
+\mathcal L_{BCE} = -\frac{1}{n}\sum_{i=1}^n (Y_i \cdot \log \hat Y_i + (1-Y_i)\cdot \log(1-\hat Y_i)),
+$$
+en donde $Y$ representa la etqueta verdadera para el caso $i$, $\hat Y$ la predicción del discriminador y $n$ el número de muestras en el conjunto de datos o el batch. La función de costo para un GAN se deriva de la BCE. Entendamos como funciona, viendo los casos límites. En una clasificación binaria (verdadero o falso) $Y_i\in[0,1]$. Si $Y_i=1$ el segundo término se anula, mientras que si $Y_i=0$ el primero se anula. Luego, si el valor predicho $\hat Y_i=1$ (verdadero) cuando $Y_i=1$, el logaritmo anula el primer término y como el segundo se anula, esto no contribuye a la función de costo (caso ideal, ya que clasificó correctamente). Con un razonamiento análogo se puede ver que si $Y_i=0$ y $\hat Y_i=0$ entonces tampoco contribuye a la función de costo. Cualuier otro valor de predicción hará que al menos algún término sume al costo total. En el caso que le erra completamente, el término logaritmo hace que explote la función de costo y lo penaliza fuertemente. 
+
+Ahora volviendo al análisis de la función de costo para GAN, como se tiene que computar sobre muchos datos, utilizamos la expresión para los valores esperados para representar el promedio sobre la distribución de los datos. Como el discriminador intenta maximizar la función de costo clasificando los casos reales en reales y los falsos como falsos, debe empujar $D(x)\approx1$ para muestras reales $x$ mientras que debe empujar $D(G(x))\approx 0$ para muestras falsas $G(z)$, donde $z \sim \mathcal N(0,\mathbb I^M)$, con $M$ la dimensión del espacio latente donde se muestra el ruido gaussiano. De la misma manera, $G$ minimiza la función de costo sólo empujando $D(G(z))\approx 1$ para casos falsos, ya que el generador no ve los casos reales $x$.
+
 ## Mezcla de densidades Gaussianas (MDN)
 
 En una red de mezcla de densidades gaussianas (MDN del inglés, Mixture Density Network) se aproxima a la densidad de probabilidad de una variable $t$  condicionada a un vector $\vec{x}$, $p(t|\vec{x})$ {cite}`mdnMedium`. La idea fue propuesta por Christopher M. Bishop en su paper en 1994, {cite}`bishop1994`, en donde dice textualmente "Why settle for one guess when you can have a whole bunch of them" (cuya traducción podría ser algo como: por qué quedarse con una estimación si podemos generar un montón de estimaciones posibles).
