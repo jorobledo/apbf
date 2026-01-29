@@ -105,7 +105,7 @@ $$
 p(z|x)=\frac{p(x|z)p(z)}{p(x)},
 $$
 
-pero el problema usual es que el denominador $o(x)$ no tiene una forma cerrada. La inferencia variacional intenta encontrar otra distribución $q(z)$ que se asemeja "lo más posible" a $p(z|x)$. Para esto, utiliza a la divergencia de Kullback-Leibler como una medida de "cercanía" entre dos distribuciones. Por lo tanto en la inferencia variacional se intenta encontrar 
+pero el problema usual es que el denominador $p(x)$ no tiene una forma cerrada. La inferencia variacional intenta encontrar otra distribución $q(z)$ que se asemeja "lo más posible" a $p(z|x)$. Para esto, utiliza a la divergencia de Kullback-Leibler como una medida de "cercanía" entre dos distribuciones. Por lo tanto en la inferencia variacional se intenta encontrar 
 
 $$
 \hat q := \text{argmin}_q KL(q(z)||p(z|x))
@@ -113,6 +113,113 @@ $$
 y luego devuelve $\hat q (z)$ como la aproximación a la distribución posterior $p(z|x)$. Por ende, en la inferencia variacional se minimiza la KL, lo que acabamos de ver que es equivalente a maximizar el ELBO.
 
 Conceptualmente, la inferencia variacional nos permite formular el problema de inferencia Bayesiana aproximada como un problema de optimización, y para esto, sabemos muy bien como utilizar PyTorch!
+
+## Autoencoder Variacional (VAE)
+
+Los autoencoders variacionales fueron introducidos en 2013 por Kingma et al. en su artículo "Auto-Encoding Variational Bayes" {cite}`kingma2022autoencodingvariationalbayes`. En su forma más simple un Autoencoder Variacional (VAE, del inglés *Variational Autoencoder*) es un modelo probabilístico que encuentra una representación latente de baja dimensionalidad de los datos {cite}`vaeBernstein`. Son utilizados para reducción de dimensionalidad como así también como modelos generativos. Un VAE es un tipo de **Autoencoder**, es decir un modelo que toma un vector de entrada $\vec{x}$, lo comprime a un espacio de menor dimensionalidad $\vec{z}$ y luego lo descomprime de nuevo en el intento de devolver nuevamente el vector $\vec{x}$.  La figura a continuación muestra la arquitectura típica de un autoencoder:
+
+<img src="https://raw.githubusercontent.com/mbernste/mbernste.github.io/master/images/autoencoder.png" style="width: 50%; height: auto;">
+
+En este esquema se muestrá al vector de entrada $\vec{x}$ que se alimenta a una función, usualmente una red neuronal, $h_{\phi}(\vec{x})$ para generar un vector de salida de menor dimensionalidad $\vec z$ y luego otra función, también red neuronal, $f_\theta$ que toma al vector $\vec{z}$ y lo descomprime hacia una aproximación $\vec{x'}$ de $\vec{x}$. Las variables $\phi$ y $\theta$ denotan los parámetros de las redes neuronales. A la red neuronal $h_{\phi}(\vec{x})$ se le suele llamar encoder (de ahí el nombre del modelo) ya que codifica la información inicial en un espacio de menor dimensionalidad, y a la red $f_\theta(\vec{z})$ reconstructora de la información se la suele llamar decoder ya que decodifica la información del espacio comprimido al espacio original, en un intento de recuperar la información inicial.
+
+Los VAE extienten la idea del autoencoder para transformarlo en un modelo probabilístico en donde se aprenden distribuciones. Describen la probabilidad conjunta $p(\vec{x},\vec{z})$ para las muestras $\vec{x}$ y sus variables latentes asociadas $\vec{z}$. Es decir, en un VAE no se produce un punto fijo en el espacio latente sino una distribución de probabilidad, como se representa en la siguiente figura.
+
+<img src="https://lh5.googleusercontent.com/ZrB_cooYvAWJ25e4gprHyODxcJtVLIXQXcMbJQ19obGM2iZ9aEwNQ6Nv-xrGot5ITkTjmUf-GeHN-4AcX-V5c_MuYNAutiB5yW08_wujSH9JdQGvXbHKSPxcP_eD9MmDP7IV151f-abqmtJJTqFeyEs">
+
+
+¿Cómo se logra esto? Bueno, definiendo una función de costo adecuarda para aprender distribuciones de probabilidad: mediante el uso de la divergencia de Kullback-Leibler que hemos visto anteriormente. En los VAE se utilizan dos funciones de costo principales (luego hay mil variaciones y se pueden agregar términos, pero veremos el VAE clásico o *vanilla*). La primera es un término de pérdida por reconstrucción, como MSE, entre la entrada $\vec{x}$ y la salida $\vec{x'}$. Esta la podríamos escribir como
+
+$$
+\mathcal L_{MSE}(\theta, \phi) = \frac{1}{N} \sum_{i=1}^N (\vec{x}_i-f_{\theta}(h_{\phi}(\vec{x}_i)))^2.
+$$
+Esto es exactamente lo que hace un autoencoder clásico.
+
+
+La diferencia está en la inclusión de un segundo término que es la divergencia de KL entre la distribución generada por el encoder y una distribución de referencia que usualmente se utiliza la Normal estándar. Pero como hemos visto, en la inferencia variacional minimizar la divergencia de KL es equivalente a maximizar el ELBO.
+
+$$
+ELBO_{\phi,\theta}= \mathbb E_{\vec{z}\sim h_\phi(\vec{z}|\vec{x})}\left[\ln p_\theta(\vec{x}|\vec{z})\right] - \mathbb E_{\vec{z}\sim h_\phi(\vec{z}|\vec{x})}\left[\ln h_\phi(\vec{z}|\vec{x})-\ln p(\vec{z})\right].
+$$
+
+Como mencionado, típicamente $\vec{z}$ se toma como un vector de variable aleatorias $\vec{z}\in \mathbb R^M$ y se utilizan distribuciones gaussianas tanto para la distribución  posterior variacional $h_\phi(\vec{z}|\vec{x})=\mathcal N (\mu_{\phi}(\vec{x}), \text{diag}\left[\sigma_\phi ^2(\vec{x})\right])$ y la distribución apriori para $\vec z$, $p(\vec{z})=\mathcal N (0, \mathbf I)$. Tanto $\mu_{\phi}(\vec{x})$ como $\sigma_\phi ^2(\vec{x})$ se obtienen de la salida de $h_\phi(\vec{x})$, es decir se diseña la arquitectura para que $h_\phi(\vec{x})$ produzca $2M$ salidas que generan ambos vectores que definen la distribución condicional para $\vec z$ dado $\vec x$. Que un VAE funcione para aprender distribuciones tiene que ver con la inferencia variacional, y vimos que ésta depende de maximizar el ELBO. Veremos más adelante que resulta más fácil plantear la minimización de la KL, pero que de fondo lo que estamos haciendo es inferencia variacional basada en la maximización del ELBO. 
+
+Para el caso de la distribución del decoder, $p_\theta(\vec{x}|\vec z)$ tenemos que tener un leve cuidado ya que dependerá de la naturaleza de nuestros datos $\vec{x}$. Si $\vec{x}$ son imágenes, entonces tenemos pixeles y $\vec x \in \{0,1,\dots,255\}^D$. Por ende, no podemos utilizar una distribución normal para la aproximación $\vec{x'}$. Una distribución posible en este caso sería 
+
+$$
+p_\theta(\vec x|\vec z) = \text{Categorical}_{\theta(\vec{z})}(\vec x),
+$$
+donde las probabilidades están dadas por la red neuronal del decoder, i.e. $\theta(\vec{z})=\text{Softmax}(f_\theta(\vec{z}))$.
+
+Ya con estas consideraciones, tendríamos todas las expresiones y podríamos calcular el ELBO si pudiesemos calcular los valores esperados de estas cantidades. Pero el problema que tenemos es que este cálculo involucra integrales que no podemos calcular. Acá, vamos a utilizar un truco llamado la **reparametrización** de una distribución. La idea se basa en escribir a $\vec{z}$ como
+
+$$
+\vec{z}=\mu + \sigma \cdot \epsilon,
+$$
+
+con $\epsilon \sim \mathcal N(0,I)$. Si muestreamos $\epsilon$, entonces $\vec{z} \sim \mathcal(\mu, \sigma^2)$. Entonces ahora podríamos utilizar una aproximación Monte Carlo a esta integral muestreando de $p(\epsilon)$ que es bien sencilla. Esto nos permite entonces calcular el gradiente con resécto a nuestra red neuronal, ya que la red encoder produce $\mu$ y $\sigma$, todo diferenciable, y luego la red del decoder toma un valor discreto $\vec{z}$ obtenido por la reparametrización y produce una salida $\vec{x'}$ (todo diferenciable). Más aún, como aprendemos mediante descenso por gradiente estocástico, es suficiente con que la aproximación de Monte Carlo sea con N=1, es decir que se samplee una vez por batch! La idea al finl se resume un poco en esta imágen (la notación es levemente diferente, pero se entiende). El encoder produce valores para la media y el desvío que produce la distribución latente Gaussiana. Luego se muestrea esta distribución mediante el truco de la reparametrización, agregando un nodo estocástico que produce $\epsilon$ y luego el decoder produce una imágen correspondiente al vector latente muestreado. Repito, tanto el encoder como el decoder son redes neuronales comúnes, podrían ser MLPs, CNNs, etc.
+
+<img src="https://raw.githubusercontent.com/mbernste/mbernste.github.io/master/images/VAE_computation_graph.png">
+
+
+Bueno, finalmente vamos a derivar la expresión que nos queda para término de pérdida por KL que utilizaremos a fines prácticos. Toda esta explicación ha sido como para entender un poco más por qué los VAE funcionan como modelos generativos. A fines prácticos, vamos a ver que 
+
+$$
+\mathcal L_{KL} = KL(h_{\phi}(\vec z|\vec x)||p(\vec z)) = - \frac{1}{2}\sum_{m=1}^M(1 + \log \sigma_{\phi}(\vec{x})_m^2 - \mu_{\phi}(\vec x)_m^2 - \exp (\log \sigma_{\phi}(\vec{x})_m^2)),
+$$
+
+en donde $\mu_{\phi}(\vec x)_m$ $\log \sigma_{\phi}(\vec{x})_m^2$ son los elementos de la salida del encoder $h_{\phi}(\vec x)$ con $2M$ salidas (ver figura anterior para clarificar).
+
+Demostración (no necesaria, sólo informativa):
+
+Podemos escribir la divergencia KL en dos términos:
+
+$$
+KL(h_{\phi}(\vec z|\vec x)||p(\vec z)) = \int h_{\phi}(\vec z|\vec x)\log h_{\phi}(\vec z|\vec x) dz - \int h_{\phi}(\vec z|\vec x) \log p(\vec z) dz.
+$$
+
+Trabajemos el primer término
+
+$$
+\begin{align}
+\int h_{\phi}(\vec z|\vec x)\log h_{\phi}(\vec z|\vec x) dz &= \int \mathcal N_z(\mu, \text{diag}\sigma^2)\log \mathcal N_z(\mu, \text{diag}\sigma^2) dz\\
+&= \int \mathcal N_z(\mu, \text{diag}\sigma^2) \sum_{m=1}^M \log \mathcal N_{z_m}(\mu_m, \sigma^2_m) dz \\
+&= \int \mathcal N_z(\mu, \text{diag}\sigma^2) \sum_{m=1}^M \left[\log(\frac{1}{\sqrt{ 2\pi\sigma_m^2}})-\frac{1}{2}\frac{(z_m-\mu_m)^2}{\sigma_m^2}\right]dz \\
+&= -\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M\log \sigma_m^2 - \frac{1}{2}\sum_{m=1}^M \int \mathcal N_z(\mu, \text{diag}\sigma^2)\frac{(z_m-\mu_m)^2}{\sigma_m^2}dz \\
+&= -\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M\log \sigma^2_m - \frac{1}{2}\sum_{m=1}^M \int \mathcal N_{z_m}(\mu_m, \sigma^2_m)\frac{(z_m-\mu_m)^2}{\sigma_m^2}dz \text{ (se usa independencia)} \\
+&=-\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M\log \sigma^2_m - \frac{1}{2}\sum_{m=1}^M \frac{1}{\sigma_m^2}\int \mathcal N_{z_m}(\mu_m, \sigma^2_m)(z_m^2-2z_m \mu_m+\mu_m^2)dz \\
+&=-\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M\log \sigma^2_m - \frac{1}{2}\sum_{m=1}^M \frac{1}{\sigma_m^2}(\mathbb E[z_m^2]-2\mathbb E[z_m]\mu_m + \mu_m^2) \\
+&=-\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M\log \sigma^2_m - \frac{1}{2}\sum_{m=1}^M \frac{1}{\sigma_m^2}(\mu_m^2 + \sigma^2 - 2\mu_m^2 + \mu_m^2) \\
+&=-\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M\log \sigma^2_m - \frac{1}{2}\sum_{m=1}^M 1 \\
+&=-\frac{M}{2}\log(2\pi) -\frac{1}{2}\sum_{m=1}^M(1+\log \sigma^2_m) \\
+\end{align}
+$$
+
+Para el segundo término, tenemos
+
+$$
+\begin{align}
+\int h_{\phi}(\vec z|\vec x) \log p(\vec z) dz &= \int \mathcal N_z(\mu, \text{diag}\sigma^2)\log \mathcal N_z(0, \mathbf I) dz \\
+&= \int \mathcal N_z(\mu, \text{diag}\sigma^2)\sum_{m=1}^M\log \mathcal N_{z_m}(0, 1) dz \\
+&=-\frac{M}{2}\log(2\pi)-\frac{1}{2}\int \mathcal N_z(\mu, \text{diag}\sigma^2)\sum_{m=1}^M z_m^2 dz \text{ (mismo razonamiento que antes)} \\
+&=-\frac{M}{2}\log(2\pi)-\frac{1}{2}\sum_{m=1}^M \int z_m^2 \mathcal N_{z_m}(\mu_m,\sigma_m^2)dz_m \\
+&=-\frac{M}{2}\log(2\pi)-\frac{1}{2}\sum_{m=1}^M (\mu_m^2 + \sigma_m^2) \\
+\end{align}
+$$
+
+Al combinar los dos términos, llegamos a 
+
+$$
+\mathcal L_{KL} =  KL(h_{\phi}(\vec z|\vec x)||p(\vec z)) = - \frac{1}{2}\sum_{m=1}^M(1 + \log \sigma_m^2 - \mu_m^2 - \sigma_m^2),
+$$
+que al pensar en $\mu_m$ y $\sigma_m$ como elementos de la última capa de una red neuronal se transforman  en la ecuación de interés. 
+
+Finalmente, 
+
+$$
+\mathcal L_{Tot} = \mathcal L_{MSE} + \mathcal L_{KL}.
+$$
+
+## Red generativa adversa (GAN)
 
 ## Mezcla de densidades Gaussianas (MDN)
 
@@ -409,24 +516,6 @@ plt.show()
 ```
 
 Vemos que a pesar de una subestimación de la sensación térmica por encima de 30$^\circ$C y por debajo de -20$^\circ$C, las predicciones concuerdan muy bien con los valores medidos y que la distribución de valores muestrada sigue la forma de la distribución medida.
-## Autoencoder Variacional (VAE)
-
-En su forma más simple un Autoencoder Variacional (VAE, del inglés *Variational Autoencoder*) es un modelo probabilístico que encuentra una representación latente de baja dimensionalidad de los datos {cite}`vaeBernstein`. Son utilizados para reducción de dimensionalidad como así también como modelos generativos. Un VAE es un tipo de **Autoencoder**, es decir un modelo que toma un vector de entrada $\vec{x}$, lo comprime a un espacio de menor dimensionalidad $\vec{z}$ y luego lo descomprime de nuevo en el intento de devolver nuevamente el vector $\vec{x}$, como se muestra en la figura a continuación:
-
-![](https://raw.githubusercontent.com/mbernste/mbernste.github.io/master/images/autoencoder.png)
-
-En este esquema se muestrá al vector de entrada $\vec{x}$ que se alimenta a una función, usualmente una red neuronal, $h_{\phi}(\vec{x})$ para generar un vector de salida de menor dimensionalidad $\vec z$ y luego otra función, también red neuronal, $f_\theta$ que toma al vector $\vec{z}$ y lo descomprime hacia una aproximación $\vec{x'}$ de $\vec{x}$. Las variables $\phi$ y $\theta$ denotan los parámetros de las redes neuronales.
-
-En el caso de los VAE, estos son como autoencoders, pero en este caso son modelos probabilísticos en donde aprenden distribuciones.  Describen la probabilidad conjunta $p(\vec{x},\vec{z})$ para las muestras $\vec{x}$ y sus variables latentes asociadas $\vec{z}$.
-
-El proceso generativo de los VAEs comienza con muestrear la variable latente $\vec{z} \in \mathbb R ^J$ de una distribución sencilla, como una distribución estándar normal. Acá $J$ es la dimensión del espacio latente que es menor a la dimensión del espacio vectorial inicial $D$. Es decir,
-
-$$
-\vec{z} \sim N(\mathbf 0, \mathbf{I})
-$$
-
-
-## Red generativa adversa (GAN)
 
 ## Normalizadores de flujo (NF)
 
