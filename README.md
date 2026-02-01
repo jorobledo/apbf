@@ -1,10 +1,48 @@
 # Aprendizaje profundo basado en la física
 
+![](./APBF/apbf_logo.svg)
+
 Curso 2026
 
-## Usage
+Docente: José I. Robledo
 
-### Building the book
+
+## Cronograma tentativo
+
+Semana 1
+
+- Clases 1 y 2: Introducción al Aprendizaje automático profundo en PyTorch
+
+Semana 2
+
+- Clases 3 y 4: Introducción al aprendizaje profundo basado en la física
+
+Semana 3
+
+- Clases 5 y 6: Redes neuronales informadas en la física (PINNs)
+
+Semana 4
+
+- Clases 7 y 8: Física Diferenciable (FD)
+
+Semana 5
+
+- Clase 8 y 10: Modelos probabilísticos (VAE, MDN)
+
+Semana 6
+
+- Clase 11 y 12: Modelos probabilísticos (GAN, NF)
+
+Semana 7
+
+- Clase 13 y 14: De simulaciones a inferencia (Bayesiano y SBI)
+
+Semana 8
+
+- Clase 15 y 16: Operadores neuronales (DeepONets y FNO)
+
+
+## Compilación del libro
 
 If you'd like to develop and/or build the Aprendizaje profundo basado en la física book, you should:
 
@@ -15,17 +53,3 @@ If you'd like to develop and/or build the Aprendizaje profundo basado en la fís
 5. Run `jupyter-book build APBF/`
 
 A fully-rendered HTML version of the book will be built in `APBF/_build/html/`.
-
-### Hosting the book
-
-Please see the [Jupyter Book documentation](https://jupyterbook.org/publish/web.html) to discover options for deploying a book online using services such as GitHub, GitLab, or Netlify.
-
-For GitHub and GitLab deployment specifically, the [cookiecutter-jupyter-book](https://github.com/executablebooks/cookiecutter-jupyter-book) includes templates for, and information about, optional continuous integration (CI) workflow files to help easily and automatically deploy books online with GitHub or GitLab. For example, if you chose `github` for the `include_ci` cookiecutter option, your book template was created with a GitHub actions workflow file that, once pushed to GitHub, automatically renders and pushes your book to the `gh-pages` branch of your repo and hosts it on GitHub Pages when a push or pull request is made to the main branch.
-
-## Contributors
-
-We welcome and recognize all contributions. You can see a list of current contributors in the [contributors tab](https://github.com/jorobledo/APBF/graphs/contributors).
-
-## Credits
-
-This project is created using the excellent open source [Jupyter Book project](https://jupyterbook.org/) and the [executablebooks/cookiecutter-jupyter-book template](https://github.com/executablebooks/cookiecutter-jupyter-book).
