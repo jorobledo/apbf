@@ -790,7 +790,420 @@ plt.show()
 
 Vemos que a pesar de una subestimación de la sensación térmica por encima de 30$^\circ$C y por debajo de -20$^\circ$C, las predicciones concuerdan muy bien con los valores medidos y que la distribución de valores muestrada sigue la forma de la distribución medida.
 
-## Normalizadores de flujo (NF)
+## Flujos normalizadores (NF)
+
+Los Flujos normalizadores (NF, del inglés *Normalizing Flows*) son modelos cuyo objetivo es aprender una distribución de probabilidad. Estos modelos de redes neuronales profundas transforman una función de distribución base $p_Z$ en una distribución objetivo $p_Y$ mediante una serie de transformaciones que llamaremos *flujos*. La idea principal está en utilizar una secuencia de mapeos diferenciables e invertibles como capas de una red neuronal que se puede entrenar. Como las transformaciones son invertibles, podemos tratar de aprender un conjunto de transformaciones que llevan la distribución del conjunto de datos de interés a una distribución simple (generalmente utilizaremos una gaussiana multidimensional) y luego utilizar la inversa y un muestreo de la distribución simple (fácil de muestrear), para generar nuevos datos que siguen distribución original. Para esto, primero nos centraremos en entender cómo se modifica una distribución de probabilidad bajo una transformación invertible y diferenciable.
+
+### Transformando distribuciones de probabilidad
+
+Supongamos una transformación invertible $g: \mathbb R^D \rightarrow \mathbb R^D$ y su inversa $f = g^{-1}$. Tenemos por lo tanto $\vec y=g(\vec z)$ y $\vec z=f(\vec y)$. La densidad de probabilidad $p_Y(\vec y)$ se puede obtener a partir de la densidad de probabilidad de $Z$. Para esto, partimos de una de las definiciones de distribución de probabilidad, que es que la integral sobre todo el espacio de la densidad de probabilidad debe ser 1 independientemente de la transformación aplicada.
+
+$$
+\int p_Y(\vec y)d\vec y = \int p_Z(\vec z)d\vec z = 1,
+$$
+
+de lo que, utilizando un cambio de variable $\vec z=f(\vec y)$ y comparando los integrandos, obtenemos que
+
+$$
+p_Y(\vec y) = p_Z(f(\vec y))\left |\det \frac{\partial f(\vec y)}{\partial \vec y}\right |,
+$$
+
+en donde $\frac{\partial f(\vec y)}{\partial \vec y}$ es el Jacobiano de $f$, y la magnitud de su determinante  provee el escaleo de $y$ debido a $f$. Pongamos un ejemplo 1-dimensional para ayudar a la comprensión y recordar siempre que es necesario el escaleo por Jacobiano de la transformación. Supongamos entonces que $D=1$, y que $g(z)=2z+1=y$. Esta transformación es invertible, $f(y)=g^{-1}(y)=(y-1)/2$, y su derivada es $1/2$.  Cuando se escalea, se modifica el volumen de la densidad de probabilidad, como se muestra en la siguiente figura. Supongamos que $z$ tiene una distribución de probabilidad uniforme en el intervalo $(0,1)$, entonces $g(z)$ pasa a tener una distribución de probabilidad uniforme en el intervalo $(1,3)$ y para que se conserve la probabilidad total (que el área sea 1), como el rango de la variable se duplicó, la densidad de probabilidad se debe reducir a la mitad. 
+
+![https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial11/NF_image_modeling.html](https://uvadlc-notebooks.readthedocs.io/en/latest/_images/uniform_flow.png)
+
+Este cambio de densidad de probabilidad es lo que se representa con el jacobiano de la transformación en la ecuación anterior y lo que permite que sigamos teniendo una distribución de probabilidad válida luego de transformar la variable. 
+
+Como generalmente estaremos trabajando con la log-verosimilityd como función de costo, entonces podemos escribir la ecuación de la transformación con el logaritmo aplicado,
+
+$$
+\log p_Y(\vec y) = \log p_Z(f(\vec y)) + \log \left |\det \frac{\partial f(\vec y)}{\partial \vec y}\right |.
+$$
+
+Cuando $f$ es sencilla, como en este caso, resulta fácil calcular la inversa. Pero por ahí la transformación que la distribución de probabilidad $p_Z$ necesita para llegar a la distribución de probabilidad objetivo de nuestros datos $p_X$ puede ser extremadamente compleja. En estos casos, más que buscar una sóla transformación que lleve de $p_Z$ a $p_X$, conviene empezar a componer funciones invertibles simples, ya que la composición de dos funciones invertibles $f_1 \circ f_2$ es también una función invertible ($(f_1 \circ f_2)^{-1}=f_1^{-1}\circ f_2^{-1}$). De esta manera, utilizando varias funciones invertibles aprendibles, un normalizador de flujo intenta transformar la distribución $p_Z(z)$ gradualmente hacia una distribución más compleja, la cuál finalmente debiera ser la de los datos $p_X(x)$. La visualización siguiente (obtenida del artículo de [Lilian Weng](https://lilianweng.github.io/posts/2018-10-13-flow-models/)) esquematiza la idea central en un normalizador de flujo.
+
+![](https://lilianweng.github.io/posts/2018-10-13-flow-models/normalizing-flow.png)
+
+
+Teniendo en cuenta esta notación vemos que 
+
+$$
+\vec z_i \sim p_i (\vec z_i).
+$$
+
+A su vez, $\vec z_{i}$ resulta de aplicar la transformación $f_i$ a $\vec z_{i-1}$, i.e.
+
+$$
+\vec z_i = f_i(\vec z_{i-1}),
+$$
+
+por lo que 
+
+$$
+\vec z_{i-1} = f_i^{-1}(\vec z_i).
+$$
+
+Aplicando la ecuación de cambio de variable para las distribuciones de probabilidad que vimos anteriormente, llegamos a que
+
+$$
+p_i(\vec z_i) = p_{i-1}(f_i^{-1}(\vec z_i)) \left |\det \frac{\partial f_{i}^{-1}(\vec z_i)}{\partial \vec z_i}\right|.
+$$
+
+Ahora, el *teorema de la función inversa* nos permite ver que  si $y=f(x)$ y $z=f^-1(y)$, entonces $\frac{\partial f^{-1}(y)}{\partial y} = \frac{\partial x}{\partial y} = \left(\frac{\partial y}{\partial x}\right)^{-1} = \left(\frac{\partial f(x)}{\partial x}\right)^{-1}$ (fácil de ver en 1D, válido para más dimensiones). Con esto, entonces  $\left |\det \frac{\partial f_{i}^{-1}(\vec z_i)}{\partial \vec z_i}\right|=\left |\det \frac{\partial f_{i}(\vec z_{i-1})}{\partial \vec z_{i-1}}\right|^{-1}$ (en donde además se tuvo en cuenta que $\det (M^{-1}) = (\det (M))^{-1}$, que es fácil de probar ya que $\det(M) \det(M^{-1}) = \det (M \cdot M^{-1})=\det (I) = 1$). Con esto, finalmente llegamos a la ecuación que utilizaremos a continuación para obtener como cambia la distribución de $\vec z_i$  al transformarse desde $z_{i-1}$ mediante $f_i$ que es
+
+$$
+p_i(\vec z_i) = p_{i-1}(\vec z_{i-1}) \left |\det \frac{\partial f_{i}(\vec z_{i-1})}{\partial \vec z_{i-1}}\right|^{-1},
+$$
+
+cuya versión logarítmica se puede escribir como
+
+$$
+\log p_i(\vec z_i) = \log p_{i-1}(\vec z_{i-1}) - \log \left |\det \frac{\partial f_{i}(\vec z_{i-1})}{\partial \vec z_{i-1}}\right|
+$$
+
+Aplicando $K$ transformaciones, podemos escribir 
+
+$$
+\begin{align}
+\vec x = \vec z_K & = f_K \circ f_{K-1} \circ \cdots \circ f_1(\vec z_0) \\
+\log p_X (\vec x) = \log \left (p_Z (\vec z_K)\right) & =  \log \left(p_{Z-1}(\vec z_{K-1})\right) - \log  \left |\det \frac{\partial f_{K}(\vec z_{K-1})}{\partial \vec z_{K-1}}\right| \\
+& = \log \left(p_{0}(\vec z_{0})\right) - \sum_{i=1}^K\log  \left |\det \frac{\partial f_{i}(\vec z_{i-1})}{\partial \vec z_{i-1}}\right|. \\
+\end{align}
+$$
+
+El camino recorrido por las variables aleatorias $\vec z_i = f_i(\vec z_{i-1})$ es el que da la idea de un *flujo* de probabilidad y la cadena total formada por las transformaciones sucesivas se llama normalizador de flujo. 
+
+El muestreo de estas transformaciones resulta super conveniente y sencillo. Se muestrea un vector aleatorio de $\vec z_0 \sim p_0$, la cuál normalmente es una distribución Gaussiana multivariada (fácil de muestrear). Luego se transforma mediante $\vec x=G(\vec z_0)=f_K \circ f_{K-1} \circ \cdots \circ f_1(\vec z_0)$ y su probabilidad se calcula transformando $p_0(\vec z_0)$ a $p_X(\vec x)$ como explicado anteriormente. 
+
+## Ejemplo: Aprendiendo Gaussianas
+
+Primero generamos un conjunto de datos que proviene de una mezcla de densidades Gaussianas. 
+
+
+```{code-cell}ipython3
+import numpy as np
+
+class GaussianMixture:
+    def __init__(self, parameters):
+
+        self.parameters = parameters
+        self.distributions = [
+            {
+                'mean': np.array(dist['mean']),
+                'std': np.array(dist['std']),
+                'cov': np.diag(np.array(dist['std']) ** 2)
+            }
+            for dist in parameters
+        ]
+
+    def sample(self, num_samples):
+        samples = []
+        num_distributions = len(self.distributions)
+        for _ in range(num_samples):
+            idx = np.random.randint(num_distributions)  # Choose a random Gaussian
+            dist = self.distributions[idx]
+            sample = np.random.multivariate_normal(mean=dist['mean'], cov=dist['cov'])
+            samples.append(sample)
+        return np.array(samples)
+
+    def likelihood(self, points):
+        likelihoods = np.zeros(points.shape[0])
+        for dist in self.distributions:
+            mean = dist['mean']
+            cov = dist['cov']
+            inv_cov = np.linalg.inv(cov)
+            det_cov = np.linalg.det(cov)
+
+            # Multivariate Gaussian PDF
+            factor = 1 / (2 * np.pi * np.sqrt(det_cov))
+            diff = points - mean
+            exponents = -0.5 * np.sum(diff @ inv_cov * diff, axis=1)
+            likelihoods += factor * np.exp(exponents)
+
+        return likelihoods
+```
+
+La clase `GaussianMixture` (GM) se puede utilizar para muestrear de múltiples distribuciones Gaussianas 2D como a su vez para evaluar la probabilidad en diferentes posiciones. Visualicemos como se distribuyen las muestras y cómo es la densidad de probabilidad generada.
+
+
+```{code-cell}ipython3
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+sns.set_theme(style="ticks")
+
+def plot_gaussian_mixture(gm, samples, grid_size=100):
+
+    x_min, x_max = np.min(samples[:, 0]) - 1, np.max(samples[:, 0]) + 1
+    y_min, y_max = np.min(samples[:, 1]) - 1, np.max(samples[:, 1]) + 1
+    x = np.linspace(x_min, x_max, grid_size)
+    y = np.linspace(y_min, y_max, grid_size)
+    X, Y = np.meshgrid(x, y)
+    points = np.column_stack([X.ravel(), Y.ravel()])
+    densities = gm.likelihood(points).reshape(grid_size, grid_size)
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+    ax1 = axes[0]
+    ax1.scatter(samples[:, 0], samples[:, 1], s=10, alpha=0.7, color="blue")
+    ax1.set_title("Scatterplot", fontsize=16)
+    ax1.set_xlim(x_min, x_max)
+    ax1.set_ylim(y_min, y_max)
+
+    ax2 = axes[1]
+    contour = ax2.contourf(X, Y, densities, cmap="viridis", levels=50)
+    cbar = fig.colorbar(contour, ax=ax2)
+    cbar.set_label("Density", fontsize=14)
+    ax2.set_title("Density Plot", fontsize=16)
+    ax2.set_xlim(x_min, x_max)
+    ax2.set_ylim(y_min, y_max)
+
+    plt.tight_layout()
+    plt.show()
+
+parameters = [
+    {"mean": [0, 0], "std": [1, 1]},
+    {"mean": [3, 2], "std": [0.5, 0.5]}
+]
+gm = GaussianMixture(parameters)
+
+samples = gm.sample(1000)
+plot_gaussian_mixture(gm, samples)
+```
+
+Utilizando esta distribución como punto de partida, la aprenderemos utilizando un Normalizador de Flujo simple, basado en un acoplamiento afin. Para esto, utilizaremos una red neuronal con tres capas y funciones de activación ReLU. El código a continuación provee la clase base `RealNVP2D` (NVP viene del inglés *Neural volume preserving* ya que preservan el volumen de la distribución)
+
+```{code-cell}ipython3
+import torch.nn as nn
+
+class FCNN(nn.Module):
+    def __init__(self, input_dim, output_dim, hidden_dim):
+
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, output_dim)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+class NVPBlock2D(nn.Module):
+    def __init__(self, dim_flow, hidden_dim=256, flip=False):
+        super().__init__()
+        self.dim_flow = dim_flow
+        self.hidden_dim = hidden_dim
+        self.flip = flip
+
+        self.f = FCNN((dim_flow // 2), dim_flow, hidden_dim)
+
+    def shift_and_log_scale_fn(self, x1):
+        s = self.f(x1)
+        shift, log_scale = torch.chunk(s, 2, dim=1)
+        return shift, log_scale
+
+    def forward(self, x, ldj=None):
+        d = self.dim_flow // 2
+        x1, x2 = x[:, :d], x[:, d:]
+        if self.flip:
+            x1, x2 = x2, x1
+
+        fcnn_input = x1
+
+        shift, log_scale = self.shift_and_log_scale_fn(fcnn_input)
+        y2 = x2 * torch.exp(log_scale) + shift
+
+        if self.flip:
+            x1, y2 = y2, x1
+        z = torch.cat([x1, y2], dim=-1)
+
+        if ldj is not None:
+            ldj = ldj + log_scale.sum(dim=-1)
+
+        return z, ldj
+
+    def inverse(self, z, ldj=None):
+
+        d = self.dim_flow // 2
+        y1, y2 = z[:, :d], z[:, d:]
+        if self.flip:
+            y1, y2 = y2, y1
+
+        fcnn_input = y1
+
+        shift, log_scale = self.shift_and_log_scale_fn(fcnn_input)
+        x2 = (y2 - shift) * torch.exp(-log_scale)  # Apply inverse affine transformation
+
+        if self.flip:
+            y1, x2 = x2, y1
+        x = torch.cat([y1, x2], dim=-1)
+
+        if ldj is not None:
+            ldj = ldj - log_scale.sum(dim=-1)
+
+        return x, ldj
+
+class RealNVP2D(nn.Module):
+    def __init__(self, dim_flow, steps=6, hidden_dim=256):
+        super().__init__()
+        self.flows = nn.ModuleList()
+        flip = False
+
+        for _ in range(steps):
+            self.flows.append(NVPBlock2D(dim_flow, hidden_dim, flip=flip))
+            flip = not flip
+
+    def forward(self, x, num_layers=None):
+
+        if num_layers is None:
+            num_layers = len(self.flows)
+
+        ldj = torch.zeros(x.shape[0], device=x.device)
+        for flow in self.flows[:num_layers]:
+            x, ldj = flow(x, ldj)
+        return x, ldj
+
+    def inverse(self, z, num_layers=None):
+
+        if num_layers is None:
+            num_layers = len(self.flows)
+
+        ldj = torch.zeros(z.shape[0], device=z.device)
+        for flow in list(reversed(self.flows[:num_layers])):
+            z, ldj = flow.inverse(z, ldj)
+        return z, ldj
+```
+
+Luego podemos generar el conjunto de datos y entrenar
+
+
+```{code-cell}ipython3
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+
+def generate_2d_gaussian_mixture(num_samples, gm):
+    samples = gm.sample(num_samples)
+    return torch.tensor(samples, dtype=torch.float32)
+
+def train_model(model, dataloader, optimizer, num_epochs=50, device="cuda"):
+    model.train()
+    model.to(device)
+    losses = []
+    for epoch in range(num_epochs):
+        epoch_loss = 0.0
+        for x in dataloader:
+            x = x[0].to(device)
+            optimizer.zero_grad()
+
+            z, ldj = model(x)
+            prior = (-0.5 * z ** 2).sum(-1) - 0.5 * torch.log(torch.tensor(2.0 * torch.pi))
+            loss = (-prior - ldj).mean()
+
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+
+        avg_loss = epoch_loss / len(dataloader)
+        losses.append(avg_loss)
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss:.4f}")
+    return losses
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+from sklearn.utils import shuffle
+
+samples = generate_2d_gaussian_mixture(50000, gm)
+samples = shuffle(samples.numpy())
+dataset = TensorDataset(torch.tensor(samples, dtype=torch.float32))
+dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+
+dim_flow = 2
+steps = 6
+hidden_dim = 256
+
+realnvp_model = RealNVP2D(dim_flow, steps, hidden_dim).to(device)
+optimizer = torch.optim.Adam(realnvp_model.parameters(), lr=2e-4)
+
+# Step 3: Train the model
+num_epochs = 50
+losses = train_model(realnvp_model, dataloader, optimizer, num_epochs=num_epochs, device=device)
+```
+
+y finalmente visualizar en cada capa como se está transformando la distribución de probabilidad desde una gaussiana bidimensional a la mezcla de densidades gaussianas.
+
+```{code-cell}ipython3
+import matplotlib.pyplot as plt
+
+def get_angle_colors(positions):
+    angles = np.arctan2(positions[:, 1], positions[:, 0])
+    angles_deg = (np.degrees(angles) + 360) % 360
+    colors = np.zeros((len(positions), 3))
+    for i, angle in enumerate(angles_deg):
+        segment = int(angle / 120)
+        local_angle = angle - segment * 120  # angle within segment [0, 120]
+        if segment == 0:
+            colors[i] = [1 - local_angle/120, local_angle/120, 0]
+        elif segment == 1:
+            colors[i] = [0, 1 - local_angle/120, local_angle/120]
+        else:
+            colors[i] = [local_angle/120, 0, 1 - local_angle/120]
+
+    return colors
+
+def visualize_progression_with_layers_and_likelihoods(model, grid_size=100, num_layers_max=6, num_samples=1000):
+
+    model.eval()
+    fig, axes = plt.subplots(2, num_layers_max + 1, figsize=(20, 8))
+
+    x = np.linspace(-5, 5, grid_size)
+    y = np.linspace(-5, 5, grid_size)
+    X, Y = np.meshgrid(x, y)
+    points = np.column_stack([X.ravel(), Y.ravel()])
+    points_tensor = torch.tensor(points, dtype=torch.float32).to(device)
+
+    for num_layers in range(num_layers_max + 1):
+
+        z = torch.randn(num_samples, model.flows[0].dim_flow).to(device)
+
+        c = get_angle_colors(z.detach().cpu().numpy())
+
+        with torch.no_grad():
+            samples, _ = model.inverse(z, num_layers=num_layers)
+
+        samples = samples.cpu().numpy()
+
+        scatter_ax = axes[0, num_layers]
+        scatter_ax.scatter(samples[:, 0], samples[:, 1], s=10, alpha=0.7, c=c)
+        scatter_ax.set_title(f"Layer: {num_layers}")
+        scatter_ax.set_xlim(-5, 5)
+        scatter_ax.set_ylim(-5, 5)
+        scatter_ax.set_xlabel("")
+        scatter_ax.set_ylabel("")
+
+        with torch.no_grad():
+            z, ldj = model(points_tensor, num_layers=num_layers)
+            prior = (-0.5 * z ** 2).sum(-1) - 0.5 * torch.log(torch.tensor(2.0 * torch.pi))
+            likelihoods = torch.exp(prior + ldj).cpu().numpy().reshape(grid_size, grid_size)
+
+        likelihood_ax = axes[1, num_layers]
+        contour = likelihood_ax.contourf(X, Y, likelihoods, levels=50, cmap="viridis")
+
+        likelihood_ax.set_xlim(-5, 5)
+        likelihood_ax.set_ylim(-5, 5)
+        likelihood_ax.set_xlabel("")
+        likelihood_ax.set_ylabel("")
+
+    plt.tight_layout()
+    plt.show()
+
+visualize_progression_with_layers_and_likelihoods(realnvp_model, grid_size=100, num_layers_max=6, num_samples=1000)
+```
+
+Resulta interesante notar que la red neuronal no toma un camino muy intuitivo para llegar a la distribución objetivo. Se va transformando de manera bastante aleatoria hasta que logra encontrar algo que se asemeja a la distribución original. Como no hay constraints en las distribuciones intermedias, esto depende fuertemente de la inicialización aleatoria de los pesos de la red. Luego veremos cómo podemos hacer para sobrellevar este problema.
 
 ```{bibliography}
 :style: unsrt
