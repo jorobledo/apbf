@@ -15,6 +15,9 @@ kernelspec:
 ```{contents}
 :local:
 ```
+
+## Incerteza en redes neuronales
+
 Es importante tener presente que todas las mediciones, modelos y discretizaciones conllevan incertidumbre. En el caso de las mediciones y observaciones, esta incertidumbre suele manifestarse en forma de errores de medición. Por otro lado, las ecuaciones de los modelos generalmente describen solo una parte del sistema de interés, dejando el resto de los fenómenos no modelados como una fuente adicional de incertidumbre. Finalmente, en las simulaciones numéricas introducimos inevitablemente errores de discretización, asociados a la aproximación de ecuaciones continuas mediante métodos computacionales.
 
 Frente a esta situación surge una pregunta fundamental: ¿cómo podemos saber si la respuesta que obtenemos es realmente la correcta?
