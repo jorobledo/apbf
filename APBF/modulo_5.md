@@ -27,7 +27,7 @@ $$
 p(\theta | x) = \frac{p(x|\theta)p(\theta)}{p(x)}.
 $$
 
-La mayoría de los métodos de inferencia Bayesiana, en los cuáles no vamos a entrar en detalle, se basan en poder evaluar **explícitamente** la verosimilitud $p(x|\theta)$. Ejemplos de modelos son la regresión lineal Bayesiana o los procesos Gaussianos. En este curso veremos un caso específico de interés, que son las redes neuronales Bayesianas, ya que involucra la parte de aprendizaje profundo que nos interesa.
+La mayoría de los métodos de inferencia Bayesiana, en los cuáles no vamos a entrar en detalle, se basan en poder evaluar **explícitamente** la verosimilitud $p(x|\theta)$. Ejemplos de modelos son la regresión lineal Bayesiana o los procesos Gaussianos. En estos métodos se intenta aproximar la distribución posterior $p(\theta|x)$ mediante métodos como MCMC o inferencia variacional. En este curso veremos un caso específico de interés, que son las redes neuronales Bayesianas, ya que involucra la parte de aprendizaje profundo que nos interesa, pero el resto lo omitiremos para centrarnos en los demás temas.
 
 La verosimilitud $p(x|\theta)$ es el eje central de este módulo, por lo que conviene entender claramente su significado. Esta cantidad nos está diciendo qué tan probable es que observemos los datos que observamos $x$ si los parámetros fueran $\theta$. Es la probabilidad *condicional* de observar $x$ dado $\theta$. 
 
@@ -124,10 +124,21 @@ if len(g_aceptados) > 0:
     plt.show()
 ```
 
-
 ## Inferencia basada en simulaciones (SBI)
 
-## Estimación de densidad neuronal e inferencia amortizada
+El método que vimos anteriormente es costoso computacionalmente, ya que requiere simular una gran cantidad de datos y comparar cada simulación con las observaciones. Cuando los datos son de alta dimensión o los modelos son complejos, la comparación se vuelve cada vez más difícil. 
+
+Una alternativa que viene del lado del aprendizaje profundo es utilizar redes neuronales para *aprender* directamente relaciones probabilísticas entre parámetros y datos simulados. Este enfoque es el que se denomina *inferencia basada en simulaciones* (SBI, del inglés Simulation Based Inference).
+
+La idea central de SBI es aprovechar la capacidad de los simuladores en generar pares de parámetros y datos $(\theta, x_{sim})\sim p(\theta) p(x_{sim}|\theta)$. Generando muchos pares mediante simulación, resulta posible entrenar los modelos probabilísticos visto anteriormente que aproximen las distribuciones relevantes para la inferencia Bayesiana. Dependiendo de qué distribución se desea aproximar, existen diferentes estrategias dentro de SBI. Podemos aproximar la distribución a posterior (Estimación Neuronal de la Posterior, NPE), la verosimilitud (Estimación Neuronal de la Verosimilitud, NLE) y también el cociente (o razón) entre la verosimilitud y la evidencia (Estimación Neuronal de la Razón, NRE), que explicaremos a continuación.
+
+Algnas ventajas de SBI frente a métodos como ABC son que escala mejor a datos de alta dimensión, puede reutilizar simulaciones para diferentes conjuntos de datos observados, aprovecha la capacidad de representación de los modelos probabilísticos, permite realizar inferencia en simuladores complejos, entre otras. Por esta razón es que SBI se ha vuelto una herramienta muy utilizada en áreas como la cosmología, física de partículas, biología y geología. Principalmente en áreas donde existen simuladores muy fidedignos de la realidad observada.
+
+### Estimación de densidad neuronal e inferencia amortizada
+
+
+### Algunos comentarios sobre los simuladores
+
 
 ```{bibliography}
 :style: unsrt
