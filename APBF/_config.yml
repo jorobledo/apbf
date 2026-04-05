@@ -7,7 +7,7 @@
 # Book settings
 title                       : Aprendizaje profundo basado en la física  # The title of the book. Will be placed in the left navbar.
 author                      : Jose Robledo  # The author of the book
-copyright                   : "2025"  # Copyright year to be placed in the footer
+copyright                   : "2026"  # Copyright year to be placed in the footer
 logo                        : apbf_logo.svg # A path to the book logo
 
 # Force re-execution of notebooks on each build.
