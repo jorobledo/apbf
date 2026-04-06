@@ -145,9 +145,9 @@ En resumen, la retropropagación del gradiente representa la implementación pr�
 
 La importancia de la diferenciación automática se extiende de manera crítica al aprendizaje profundo basado en la física, donde las redes neuronales deben satisfacer restricciones derivadas de leyes físicas fundamentales. En las Redes Neuronales Basadas en la Física (PINNs), la capacidad de calcular derivadas exactas de las salidas de la red con respecto a sus entradas permite incorporar ecuaciones diferenciales parciales (PDEs) directamente en la función de costo. Esta integración automática de conocimiento físico no solo mejora la precisión de las predicciones, sino que también garantiza que las soluciones aprendidas respeten las invariantes y conservaciones inherentes a los sistemas físicos, abriendo nuevas posibilidades para la resolución eficiente de problemas complejos en ciencia e ingeniería.
 
-### Conexiones residuales
+### problemas con el gradiente y conexiones residuales
 
-A medida que las redes neuronales profundas comenzaron a escalar en número de capas, se observó un fenómeno paradójico. Al incrementar la profundidad del modelo, el desempeño en entrenamiento y validación podía verse afectado negativamente. Aún cuando el modelo más profundo tenía mayor capacidad expresiva que uno más superficial, no se observaban mejoras. Y esto no se debía al sobreajuste sino a una dificultad inherente en el proceso de optimización. 
+A medida que las redes neuronales comenzaron a escalar en número de capas, se observó un fenómeno paradójico. Al incrementar la profundidad del modelo, el desempeño en entrenamiento y validación podía verse afectado negativamente. Aún cuando el modelo más profundo tenía mayor capacidad expresiva que uno más superficial, no se observaban mejoras. Y esto no se debía al sobreajuste sino a una dificultad inherente en el proceso de optimización. 
 
 Una de las causas principales de este fenómeno fue la atenuación o explosión del gradiente durante la retropropagación. En redes neuronales muy profundas, los gradientes pueden volverse extremadamente pequeños o grandes al atravesar muchas capas consecutivas, lo que dificulta el ajuste efectivo de los parámetros de las primeras capas. Las primeras ideas para mitigar este problema fueron la normalización de los datos por batches y comenzar con una inicialización adecuada de los pesos del modelo. A pesar de que esto tuvo un efecto positivo sobre el aprendizaje de los modelos profundo, no resultó suficiente para permitir entrenamiento estable de redes extremadamente profundas. 
 
@@ -202,9 +202,6 @@ from torchvision import datasets, transforms
 import random
 import matplotlib.pyplot as plt
 
-# -----------------------------
-# Configuración básica
-# -----------------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.manual_seed(0)
 
@@ -212,9 +209,7 @@ batch_size = 128
 lr = 1e-3
 epochs = 3
 
-# -----------------------------
-# Datos: Fashion-MNIST (28x28)
-# -----------------------------
+# Datos
 transform = transforms.Compose([
     transforms.ToTensor(),  # [0,1], shape: (1,28,28)
 ])
@@ -225,9 +220,7 @@ test_ds  = datasets.FashionMNIST(root="./data", train=False, download=True, tran
 train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
 test_loader  = DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True)
 
-# -----------------------------
-# Modelo: CNN pequeña (rápida y suficiente)
-# -----------------------------
+# Modelo Red Neuronal Convolucional
 class SmallCNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -251,9 +244,7 @@ model = SmallCNN().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-# -----------------------------
 # Entrenamiento
-# -----------------------------
 def accuracy(loader):
     model.eval()
     correct = 0
@@ -286,9 +277,6 @@ for epoch in range(1, epochs + 1):
 
     print(f"Epoch {epoch}/{epochs} | loss: {train_loss:.4f} | test acc: {test_acc:.4f}")
 
-# -----------------------------
-# (Opcional) Mapa de clases
-# -----------------------------
 classes = ["Remera","Pantalón","Pulover","Vestido","Abrigo","Sandalia","Camisa","Zapatilla","Bolso","Bota"]
 
 model.eval().cpu()
@@ -314,6 +302,7 @@ plt.suptitle("Clasificación de imágenes de ropa (Fashion-MNIST)")
 plt.tight_layout()
 plt.show()
 ```
+
 ### Modelos de regresión 
 
 Los problemas de regresión constituyen una de las tareas fundamentales del aprendizaje automático y del aprendizaje profundo. En este tipo de problemas, el objetivo es aproximar una relación funcional entre un conjunto de variables de entrada y una o más variables de salida continuas. A diferencia de la clasificación, donde se asignan etiquetas discretas, la regresión busca predecir magnitudes reales que suelen representar cantidades físicas, estados del sistema o variables observables de interés.
