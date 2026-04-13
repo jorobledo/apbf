@@ -12,6 +12,10 @@ kernelspec:
 ---
 # Introducción al aprendizaje profundo basado en la física
 
+**Diapositivas teórico**: [Semana_2.pdf](slides/Semana_2.pdf)
+
+**Guía de trabajo práctico**: [Guia_Semana_01_Fundamentos_Python_y_ML.ipynb](./practicos/Guia_Semana_02_Deep_Learning_Autograd.ipynb)
+
 ```{contents}
 :local:
 ```
