@@ -55,7 +55,9 @@ La piedra angular de la diferenciación automática es el concepto del grafo com
 
 Para concretar esta idea, consideremos la función $f(x,y) = xy + \sin(x)$. Podemos descomponerla como:
 
-$$a = x \cdot y, \quad b = \sin(x), \quad z = a + b$$
+$$
+a = x \cdot y, \quad b = \sin(x), \quad z = a + b
+$$
 
 donde $a$ y $b$ son variables intermedias. El grafo computacional que representa estas operaciones se muestra en la siguiente figura, donde se observa claramente la estructura de dependencias.
 
@@ -75,9 +77,15 @@ En el contexto del grafo computacional, la aplicación de la regla de la cadena 
 
 En el modo directo, aplicamos la regla de la cadena progresivamente desde las variables de entrada hacia la salida. Consideremos nuevamente el ejemplo anterior. Si queremos calcular cómo cambia $z$ con respecto a $x$, introducimos las variaciones $dx$ y $dy$ en las entradas, propagándolas hacia adelante:
 
-$$da = y \cdot dx + x \cdot dy$$
-$$db = \cos(x) \cdot dx$$
-$$dz = da + db$$
+$$
+da = y \cdot dx + x \cdot dy
+$$
+$$
+db = \cos(x) \cdot dx
+$$
+$$
+dz = da + db
+$$
 
 Estas ecuaciones pueden implementarse directamente en código:
 
