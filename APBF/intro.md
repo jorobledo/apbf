@@ -14,6 +14,8 @@ kernelspec:
 
 Autor: Dr. José I. Robledo - [página personal](https://jorobledo.github.io/)
 
+E-mail: jose.robledo@ib.edu.ar
+
 ## Introducción
 
 En la intersección de la física y la inteligencia artificial, surge un campo de estudio que promete revolucionar nuestra comprensión y capacidad de modelar fenómenos complejos: el aprendizaje profundo basado en la física. Este libro de apuntes está diseñado para guiar en español a estudiantes de grado y posgrado de física, ingeniería y disciplinas afines a través de este emergente ámbito de estudio. A medida que avanzamos hacia una era donde los modelos computacionales se vuelven cada vez más sofisticados, la integración de principios físicos en el aprendizaje profundo ofrece un enfoque poderoso para abordar problemas que antes parecían intratables.
@@ -71,3 +73,16 @@ Semana 8
 - Clase 15 y 16: Operadores neuronales (DeepONets y FNO)
 
 
+## Trabajo Final Integrador (28/05/2026)
+
+El trabajo final tiene como objetivo aplicar de manera práctica alguna(s) de las metodologías de aprendizaje automático basadas en la física vistas durante el curso, en la resolución de un problema concreto.
+
+Cada estudiante que desee aprobar la materia deberá
+
+1. Definir un problema de interés que pueda abordarse mediante las técnicas vistas en clase. El problema puede ser de libre elección, pero debe ser acordado con el docente de antemano. En caso de no contar con idea propia, deberá consultar para definir un problema adecuado. **Fecha límite para definir el problema:** 21/05/2026 (puede definirlo de antemano e irlo trabajando si desea).
+
+2. Deberá realizar una defensa oral de su proyecto **el día 28/05/2026**. En esta defensa deberá presentar mínimamente el problema y los objetivos, una descripción del abordaje realizado, el/los modelos planteados, el entrenamiento y los resultados obtenidos en una presentación con diapositivas. Se espera un análisis con métricas de desempeño, discusión de las ventajas y limitaciones encontradas del enfoque y posibles mejoras/continuación. **La duración máxima de la exposición será de 20 minutos** con 5 minutos adicionales destinados a preguntas del docente. 
+
+3. Finalmente, deberá entregar vía mail la jupyter notebook (o script the python si lo prefiere) de entrenamiento y obtención de los resultados presentados, que será evaluada, con posterior devolución.
+
+Por preguntas, escribir a jose.robledo@ib.edu.ar 
