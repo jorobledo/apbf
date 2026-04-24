@@ -15,10 +15,13 @@ kernelspec:
 **Diapositivas teórico**: [Semana_3.pdf](slides/Semana_3.pdf)
 
 **Notebooks teórico-práctico**: 
-    - [Semana03_PINNs.ipynb](./teorico_practicos/Semana03_PINNs.ipynb)
-    - [Semana03_intro_deepxde.ipynb](./teorico_practicos/Semana03_intro_deepxde.ipynb)
-    - [Semana03_opt_bayesiana.ipynb](./teorico_practicos/Semana03_opt_bayesiana.ipynb)
-    - [Semana03_pinn_parametrico.ipynb](./teorico_practicos/Semana03_pinn_parametrico.ipynb)
+- [Semana03_PINNs.ipynb](./teorico_practicos/Semana03_PINNs.ipynb)
+
+- [Semana03_intro_deepxde.ipynb](./teorico_practicos/Semana03_intro_deepxde.ipynb)
+
+- [Semana03_opt_bayesiana.ipynb](./teorico_practicos/Semana03_opt_bayesiana.ipynb)
+
+- [Semana03_pinn_parametrico.ipynb](./teorico_practicos/Semana03_pinn_parametrico.ipynb)
 
 **Guía de trabajo práctico**: [Guia_Semana_03_PINNs.ipynb](./practicos/Guia_Semana_03_PINNs.ipynb)
 
