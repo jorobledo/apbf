@@ -66,7 +66,7 @@ $$
 \frac{p(x,Z;\theta)}{q(Z)}
 \right] \\
 &\ge \mathbb{E}_{Z\sim q}
-\left[
+\left[\log 
 \frac{p(x,Z;\theta)}{q(Z)}
 \right] =\mathbb{E}_{Z\sim q}
 \left[
@@ -77,7 +77,7 @@ $$
 en donde para pasar a la desigualdad hemos utilizado la desigualdad de Jensen {cite}`wiki:jensen`. Definimos entonces 
 
 $$
-ELBO := \left[
+ELBO := \left[\log
 \frac{p(x,Z;\theta)}{q(Z)}
 \right].
 $$
@@ -90,7 +90,7 @@ KL(q(z)||p(z|x;\theta)) :&= \mathbb E_{Z \sim q}\left[\log \frac{q(Z)}{p(Z|x;\th
 & = \mathbb E_{Z \sim q}\left[\log q(Z)\right] - \mathbb E_{Z \sim q}\left[\log p(Z|x;\theta)\right] \\
 & = \mathbb E_{Z \sim q}\left[\log q(Z)\right] - \mathbb E_{Z \sim q}\left[\log \frac{p(x,Z;\theta)}{p(x;\theta)}\right] \\
 & = \mathbb E_{Z \sim q}\left[\log q(Z)\right] - \mathbb E_{Z \sim q}\left[\log p(x,Z;\theta)\right] + \mathbb E_{Z \sim q}\left[\log p(x;\theta)\right] \\
-& = \log p(x;\theta) - \mathbb E_{Z \sim q}\left[\frac{\log p(x,Z;\theta)}{\log q(Z)}\right] \\
+& = \log p(x;\theta) - \mathbb E_{Z \sim q}\left[\log\frac{ p(x,Z;\theta)}{ q(Z)}\right] \\
 & = \text{evidencia} - ELBO.
 \end{align}
 $$
