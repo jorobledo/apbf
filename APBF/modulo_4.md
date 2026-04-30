@@ -12,6 +12,14 @@ kernelspec:
 ---
 # Modelos probabilísticos
 
+**Diapositivas teórico**: 
+
+- [Semana_4.5.pdf](slides/Semana_4.5.pdf)
+
+**Notebooks teórico-práctico**: 
+- [Semana04_MDN.ipynb](./teorico_practicos/Semana04_MDN.ipynb)
+- [Semana04_VAE.ipynb](./teorico_practicos/Semana04_VAE.ipynb)
+
 ```{contents}
 :local:
 ```
