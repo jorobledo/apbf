@@ -36,7 +36,7 @@ kernelspec:
 **Guía de trabajo práctico**: 
 
 - [Guia_Semana_03_PINNs.ipynb](./practicos/Guia_Semana_03_PINNs.ipynb)
-
+- [Guia_Semana_04_Fisica_Diferenciable.ipynb](./practicos/Guia_Semana_04_Fisica_Diferenciable.ipynb)
 
 ```{contents}
 :local:
