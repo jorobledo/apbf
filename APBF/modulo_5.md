@@ -23,6 +23,11 @@ kernelspec:
 - [Semana06_sbi_02.ipynb](./teorico_practicos/Semana06_sbi_02.ipynb)
 - [Semana06_sbi_03.ipynb](./teorico_practicos/Semana06_sbi_03.ipynb)
 
+**Guía de trabajo práctico**: 
+
+- [Guia_Semana_06_SBI.ipynb](./practicos/Guia_Semana_06_SBI.ipynb)
+
+
 ```{contents}
 :local:
 ```
