@@ -12,6 +12,14 @@ kernelspec:
 ---
 # Cuantificación de incerteza en redes neuronales
 
+**Diapositivas teórico**: 
+
+- [Semana_7.pdf](slides/Semana_7.pdf)
+
+**Notebooks teórico-práctico**: 
+
+- [Semana07_UQ.ipynb](./teorico_practicos/Semana07_UQ.ipynb)
+
 ```{contents}
 :local:
 ```
