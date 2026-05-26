@@ -12,6 +12,15 @@ kernelspec:
 ---
 # Operadores neuronales
 
+**Diapositivas teórico**: 
+
+- [Semana_8.pdf](slides/Semana_8.pdf)
+
+**Notebooks teórico-práctico**: 
+
+- [Semana08_NOs.ipynb](./teorico_practicos/Semana08_NOs.ipynb)
+
+
 ```{contents}
 :local:
 ```
